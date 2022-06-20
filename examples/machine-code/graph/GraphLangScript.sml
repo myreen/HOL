@@ -7,7 +7,7 @@ val _ = ParseExtras.temp_loose_equality()
 open wordsTheory wordsLib pairTheory listTheory relationTheory;
 open pred_setTheory arithmeticTheory combinTheory;
 open arm_decompTheory set_sepTheory progTheory addressTheory;
-open m0_decompTheory riscv_progTheory;
+open m0_decompTheory riscv_progTheory prog_ppcTheory;
 open arm_decompLib m0_decompLib;
 
 val op by = BasicProvers.byA
@@ -340,6 +340,86 @@ val riscv_STATE_thm = save_thm("riscv_STATE_thm",
   |> REWRITE_RULE [riscv_STATE_REGS_def,STAR_ASSOC]
   |> SPEC_ALL);
 
+(* representation in PowerPC SPEC *)
+
+(*
+
+open prog_ppcLib
+
+  val th = ppc_spec "7C119000";  (* cmpw 17,18    *)
+  val th = ppc_spec "7C812839";  (* and. 1,4,5    *)
+  val th = ppc_spec "7C5A2278";  (* xor 26, 2, 4  *)
+  val th = ppc_spec "7C5A1378";  (* mr 26, 2      *)
+  val th = ppc_spec "7C5A212E";  (* stwx 2, 26, 4 *)
+  val th = ppc_spec "80450004";  (* lwz 2, 4(5)   *)
+  val th = ppc_spec "7C221A14";  (* add 1,2,3     *)
+  val th = ppc_spec "4BFFFFFC";  (* b L1          *)
+  val th = ppc_spec "4181FFF4";  (* bc 12,1,L1    *)
+  val th = ppc_spec "4082FFF0";  (* bc 4,2,L1     *)
+  val th = ppc_spec "4083FFEC";  (* bc 4,3,L1     *)
+  val th = ppc_spec "88830005";  (* lbz 4,5,3     *)
+  val th = ppc_spec "98830005";  (* stb 4,5,3     *)
+  val th = ppc_spec "7C858396";  (* divwu 4,5,16  *)
+*)
+
+val ppc_STATE_REGS_def = Define `
+  ppc_STATE_REGS s =
+    pR 0w (var_word "r0" s) *
+    pR 1w (var_word "r1" s) *
+    pR 2w (var_word "r2" s) *
+    pR 3w (var_word "r3" s) *
+    pR 4w (var_word "r4" s) *
+    pR 5w (var_word "r5" s) *
+    pR 6w (var_word "r6" s) *
+    pR 7w (var_word "r7" s) *
+    pR 8w (var_word "r8" s) *
+    pR 9w (var_word "r9" s) *
+    pR 10w (var_word "r10" s) *
+    pR 11w (var_word "r11" s) *
+    pR 12w (var_word "r12" s) *
+    pR 13w (var_word "r13" s) *
+    pR 14w (var_word "r14" s) *
+    pR 15w (var_word "r15" s) *
+    pR 16w (var_word "r16" s) *
+    pR 17w (var_word "r17" s) *
+    pR 18w (var_word "r18" s) *
+    pR 19w (var_word "r19" s) *
+    pR 20w (var_word "r20" s) *
+    pR 21w (var_word "r21" s) *
+    pR 22w (var_word "r22" s) *
+    pR 23w (var_word "r23" s) *
+    pR 24w (var_word "r24" s) *
+    pR 25w (var_word "r25" s) *
+    pR 26w (var_word "r26" s) *
+    pR 27w (var_word "r27" s) *
+    pR 28w (var_word "r28" s) *
+    pR 29w (var_word "r29" s) *
+    pR 30w (var_word "r30" s) *
+    pR 31w (var_word "r31" s)`;
+
+val ppc_STACK_MEMORY_def = Define `
+  ppc_STACK_MEMORY = pBYTE_MEMORY`;
+
+val ppc_STATUS_def = Define `
+  ppc_STATUS s =
+    pS1 (PPC_CR0 0w) (SOME (var_bool "n" s)) *
+    pS1 (PPC_CR0 1w) (SOME (var_bool "v" s)) *
+    pS1 (PPC_CR0 2w) (SOME (var_bool "z" s)) *
+    pS1 (PPC_CR0 3w) NONE *
+    pS1 PPC_CARRY (SOME (var_bool "c" s))`;
+
+val ppc_STATE_def = Define `
+  ppc_STATE s =
+    ppc_STATE_REGS s * ppc_STATUS s * (* pLR (var_word "lr" s) * *)
+    pBYTE_MEMORY (var_dom "dom" s) (var_mem "mem" s) *
+    ppc_STACK_MEMORY (var_dom "dom_stack" s) (var_mem "stack" s)`;
+
+val ppc_STATE_thm = save_thm("ppc_STATE_thm",
+  ppc_STATE_def
+  |> REWRITE_RULE [ppc_STATE_REGS_def,ppc_STATUS_def,STAR_ASSOC]
+  |> SPEC_ALL);
+
+
 (* misc *)
 
 val var_update_thm = store_thm("var_update_thm",
@@ -409,14 +489,17 @@ val IMPL_INST_def = Define `
 val a_tools = ``(ARM_MODEL,arm_STATE,arm_PC)``
 val m_tools = ``(M0_MODEL,m0_STATE,m0_PC)``
 val r_tools = ``(RISCV_MODEL,riscv_STATE,riscv_PC)``
+val p_tools = ``(PPC_MODEL,ppc_STATE,pPC)``
 
 val ARM_def = Define `ARM (c:((word32 # word32) set)) = (c,^a_tools)`;
 val M0_def = Define `M0 (c:(word32 # (word16 + word32)) set) = (c,^m_tools)`;
 val RISCV_def = Define `RISCV (c:(word64 # (word8 list)) set) = (c,^r_tools)`;
+val PPC_def = Define `PPC (c:((word32 # word32) set)) = (c,^p_tools)`;
 
 val _ = ``IMPL_INST (ARM _)``;
 val _ = ``IMPL_INST (M0 _)``;
 val _ = ``IMPL_INST (RISCV _)``;
+val _ = ``IMPL_INST (PPC _)``;
 
 val IMPL_INST_IF = store_thm("IMPL_INST_IF",
   ``IMPL_INST code locs (Inst pc1 assert1 next1) /\
@@ -432,6 +515,10 @@ val IMPL_INST_IF_ALT = store_thm("IMPL_INST_IF_ALT",
        (Inst pc1 (\s. if guard s then assert1 s else assert2 s)
           (IF guard next1 next2))``,
   SIMP_TAC std_ss [IMPL_INST_def,exec_next_def,next_ok_def] \\ METIS_TAC []);
+
+val _ = Parse.hide "pc"
+val _ = Parse.hide "assert"
+val _ = Parse.hide "guard"
 
 val IMPL_INST_SIMP_IF = store_thm("IMPL_INST_SIMP_IF",
   ``IMPL_INST code locs
@@ -564,6 +651,13 @@ val riscv_STATE_all_names = store_thm("riscv_STATE_all_names",
   ``EVERY (\n. s1 n = s2 n) all_names ==>
     (riscv_STATE s1 = riscv_STATE s2)``,
   SIMP_TAC std_ss [riscv_STATE_thm,EVERY_DEF,all_names_def,
+    var_word8_def,var_dom_def,var_mem_def,var_nat_def,
+    var_word_def,STAR_ASSOC,var_acc_def,var_bool_def]);
+
+val ppc_STATE_all_names = store_thm("ppc_STATE_all_names",
+  ``EVERY (\n. s1 n = s2 n) all_names ==>
+    (ppc_STATE s1 = ppc_STATE s2)``,
+  SIMP_TAC std_ss [ppc_STATE_thm,EVERY_DEF,all_names_def,
     var_word8_def,var_dom_def,var_mem_def,var_nat_def,
     var_word_def,STAR_ASSOC,var_acc_def,var_bool_def]);
 
@@ -1742,6 +1836,11 @@ val SKIP_SPEC_RISCV = store_thm("SKIP_SPEC_RISCV",
       SPEC RISCV_MODEL (riscv_PC p * cond (SKIP_TAG asm)) {} (riscv_PC (p + n2w n))``,
   SIMP_TAC std_ss [SKIP_TAG_def,SPEC_MOVE_COND,unspecified_pre_def]);
 
+val SKIP_SPEC_PPC = store_thm("SKIP_SPEC_PPC",
+  ``!asm n.
+      SPEC PPC_MODEL (pPC p * cond (SKIP_TAG asm)) {} (pPC (p + n2w n))``,
+  SIMP_TAC std_ss [SKIP_TAG_def,SPEC_MOVE_COND,unspecified_pre_def]);
+
 val fake_spec = store_thm("fake_spec",
   ``SPEC ARM_MODEL (aPC p * aR 0w r0 * cond (unspecified_pre)) {}
                    (aR 0w ARB * aPC (p + 4w))``,
@@ -2249,7 +2348,7 @@ val SKIP_TAG_IMP_CALL_M0 = store_thm("SKIP_TAG_IMP_CALL_M0",
       arm_STATE_REGS_def,STAR_ASSOC,SPEC_REFL]);
 
 val SKIP_TAG_IMP_CALL_RISCV = store_thm("SKIP_TAG_IMP_CALL_RISCV",
-  ``IMPL_INST (RISCV c) locs
+  ``IMPL_INST (RISCV code) locs
      (Inst entry (K T)
         (ASM (SOME (\s. SKIP_TAG str)) []
            (Jump exit))) ==>
@@ -2312,6 +2411,77 @@ val SKIP_TAG_IMP_CALL_RISCV = store_thm("SKIP_TAG_IMP_CALL_RISCV",
          riscv_STATE_def,
          var_word_def,var_acc_def,ret_and_all_names_def,all_names_def,
          var_dom_def,var_word_def,var_mem_def,var_word8_def]
+  \\ fs [apply_update_def,APPLY_UPDATE_THM,arm_STATE_def,m0_STATE_def,
+      arm_STATE_REGS_def,STAR_ASSOC,SPEC_REFL]);
+
+val SKIP_TAG_IMP_CALL_PPC = store_thm("SKIP_TAG_IMP_CALL_PPC",
+  ``IMPL_INST (PPC code) locs
+     (Inst entry (K T)
+        (ASM (SOME (\s. SKIP_TAG str)) []
+           (Jump exit))) ==>
+    !old. (old = str) ==>
+    !name.
+      (locs name = SOME entry) ==>
+      IMPL_INST (PPC code) locs
+       (Inst entry (K T)
+         (CALL NONE
+           [("ret",(\s. VarWord exit));
+            ("r0",var_acc "r0");
+            ("r1",var_acc "r1");
+            ("r2",var_acc "r2");
+            ("r3",var_acc "r3");
+            ("r4",var_acc "r4");
+            ("r5",var_acc "r5");
+            ("r6",var_acc "r6");
+            ("r7",var_acc "r7");
+            ("r8",var_acc "r8");
+            ("r9",var_acc "r9");
+            ("r10",var_acc "r10");
+            ("r11",var_acc "r11");
+            ("r12",var_acc "r12");
+            ("r13",var_acc "r13");
+            ("r14",var_acc "r14");
+            ("r15",var_acc "r15");
+            ("r16",var_acc "r16");
+            ("r17",var_acc "r17");
+            ("r18",var_acc "r18");
+            ("r19",var_acc "r19");
+            ("r20",var_acc "r20");
+            ("r21",var_acc "r21");
+            ("r22",var_acc "r22");
+            ("r23",var_acc "r23");
+            ("r24",var_acc "r24");
+            ("r25",var_acc "r25");
+            ("r26",var_acc "r26");
+            ("r27",var_acc "r27");
+            ("r28",var_acc "r28");
+            ("r29",var_acc "r29");
+            ("r30",var_acc "r30");
+            ("r31",var_acc "r31");
+            ("mode",var_acc "mode"); ("n",var_acc "n");
+            ("z",var_acc "z"); ("c",var_acc "c"); ("v",var_acc "v");
+            ("mem",var_acc "mem"); ("dom",var_acc "dom");
+            ("stack",var_acc "stack");
+            ("dom_stack",var_acc "dom_stack");
+            ("clock",var_acc "clock"); ("ret_addr_input",var_acc "r10")]
+          name (Jump exit)))``,
+  fs [IMPL_INST_def,next_ok_def,check_ret_def,exec_next_def,
+      check_jump_def,get_assert_def,LET_THM]
+  \\ fs [PPC_def] \\ rpt BasicProvers.TOP_CASE_TAC \\ fs []
+  \\ fs [apply_update_def,APPLY_UPDATE_THM,arm_STATE_def,m0_STATE_def,
+         arm_STATE_CPSR_def,var_bool_def,var_nat_def,m0_STATE_PSR_def,
+         var_word_def,var_acc_def,ret_and_all_names_def,all_names_def,
+         var_dom_def,var_word_def,var_mem_def,var_word8_def]
+  \\ fs [apply_update_def,APPLY_UPDATE_THM,arm_STATE_def,m0_STATE_def,ppc_STATE_def,
+         arm_STATE_CPSR_def,var_bool_def,arm_STATE_REGS_def,
+         m0_STATE_REGS_def,var_nat_def,m0_STATE_PSR_def,ppc_STATE_REGS_def,
+         ppc_STATE_def,ppc_STATUS_def,SKIP_TAG_def,
+         var_word_def,var_acc_def,ret_and_all_names_def,all_names_def,
+         var_dom_def,var_word_def,var_mem_def,var_word8_def]
+  \\ fs [GSYM var_word_def |> REWRITE_RULE [var_acc_def],
+         GSYM var_bool_def |> REWRITE_RULE [var_acc_def],
+         GSYM var_mem_def |> REWRITE_RULE [var_acc_def],
+         GSYM var_dom_def |> REWRITE_RULE [var_acc_def]]
   \\ fs [apply_update_def,APPLY_UPDATE_THM,arm_STATE_def,m0_STATE_def,
       arm_STATE_REGS_def,STAR_ASSOC,SPEC_REFL]);
 

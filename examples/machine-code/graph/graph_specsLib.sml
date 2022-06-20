@@ -110,15 +110,32 @@ local
   val riscv_state_type = riscv_state_parts |> hd |> type_of
   val riscv_state_combs = map (fn tm => (rator tm,rand tm)) riscv_state_parts
   val riscv_state_thm = riscv_STATE_thm
+  val ppc_state_inst = ppc_STATE_thm |> concl |> find_terms var_lookup
+          |> map (fn tm =>
+            let
+              val str = tm |> rator |> rand |> stringSyntax.fromHOLstring
+              val ty = type_of tm
+            in mk_var(str,ty) |-> tm end)
+          |> (fn x => (``dmem:word32 set`` |->
+                       ``(var_dom "dom" ^s32):word32 set``)::
+                      (``dom_stack:word32 set`` |->
+                       ``(var_dom "dom_stack" ^s32):word32 set``)::x) |> INST
+  val ppc_state = ppc_STATE_thm |> concl |> rator |> rand
+  val ppc_state_parts = ppc_STATE_thm |> concl |> rand |> list_dest dest_star
+  val ppc_state_type = ppc_state_parts |> hd |> type_of
+  val ppc_state_combs = map (fn tm => (rator tm,rand tm)) ppc_state_parts
+  val ppc_state_thm = ppc_STATE_thm
 in
   fun state_tools () =
     case (!arch_name) of
-      ARM => (arm_state_inst, arm_state, arm_state_parts,
-              arm_state_type, arm_state_combs, arm_state_thm)
-    | M0 => (m0_state_inst, m0_state, m0_state_parts, m0_state_type,
-             m0_state_combs, m0_state_thm)
+      ARM   => (arm_state_inst, arm_state, arm_state_parts,
+                arm_state_type, arm_state_combs, arm_state_thm)
+    | M0    => (m0_state_inst, m0_state, m0_state_parts, m0_state_type,
+                m0_state_combs, m0_state_thm)
     | RISCV => (riscv_state_inst, riscv_state, riscv_state_parts, riscv_state_type,
                 riscv_state_combs, riscv_state_thm)
+    | PPC   => (ppc_state_inst, ppc_state, ppc_state_parts, ppc_state_type,
+                ppc_state_combs, ppc_state_thm)
 end
 
 val STATE_INTRO_RULE_input = ref TRUTH
@@ -208,9 +225,10 @@ fun write_transform th1 th2_opt th_res = let
   in th_res end
 
 fun mk_code_term c =
-  case (!arch_name) of ARM => ``ARM ^c``
-                     | M0 => ``M0 ^c``
-                     | RISCV => ``RISCV ^c``;
+  case (!arch_name) of ARM   => ``ARM ^c``
+                     | M0    => ``M0 ^c``
+                     | RISCV => ``RISCV ^c``
+                     | PPC   => ``PPC ^c``;
 
 val make_ASM_input = ref TRUTH;
 val make_CALL_input = ref TRUTH;
@@ -291,6 +309,7 @@ local
       TRY (MATCH_MP_TAC arm_STATE_all_names)
       \\ TRY (MATCH_MP_TAC m0_STATE_all_names)
       \\ TRY (MATCH_MP_TAC riscv_STATE_all_names)
+      \\ TRY (MATCH_MP_TAC ppc_STATE_all_names)
       \\ REWRITE_TAC [all_names_def,EVERY_DEF,apply_update_def,
            combinTheory.APPLY_UPDATE_THM,var_acc_def]
       \\ CONV_TAC (DEPTH_CONV BETA_CONV)
@@ -334,7 +353,7 @@ local
       \\ CONV_TAC (DEPTH_CONV stringLib.string_EQ_CONV)
       \\ ASM_REWRITE_TAC [apply_update_NIL]
       \\ SIMP_TAC std_ss [next_ok_def,check_ret_def,
-                          ARM_def,M0_def,RISCV_def,LET_THM]
+                          ARM_def,M0_def,RISCV_def,PPC_def,LET_THM]
       \\ TRY (REWRITE_TAC [ret_and_all_names_def,all_names_def,MAP,APPEND]
         \\ REWRITE_TAC [all_names_def,EVERY_DEF,apply_update_def,
              combinTheory.APPLY_UPDATE_THM,var_acc_def,var_word_def]
@@ -374,7 +393,7 @@ local
 *)
     val lemma = auto_prove "make_ASM" (goal,
       CONV_TAC simp \\ REPEAT STRIP_TAC \\ IMP_RES_TAC ret_lemma
-      \\ ASM_SIMP_TAC std_ss [code_case_of,ARM_def,M0_def,RISCV_def,LET_THM]
+      \\ ASM_SIMP_TAC std_ss [code_case_of,ARM_def,M0_def,RISCV_def,PPC_def,LET_THM]
       \\ NTAC 20 (ONCE_REWRITE_TAC [var_word_apply_update])
       \\ CONV_TAC (DEPTH_CONV stringLib.string_EQ_CONV)
       \\ ASM_REWRITE_TAC [apply_update_NIL] THEN1 EVAL_TAC THEN1 EVAL_TAC
@@ -413,7 +432,7 @@ local
     val (m,_,c,_) = dest_spec (concl th)
     val goal = ``IMPL_INST ^(mk_code_term c) locs ^i``
     val lemma = auto_prove "make_SWITCH" (goal,
-      REWRITE_TAC [IMPL_INST_IF_SPLIT,ARM_def,RISCV_def,M0_def]
+      REWRITE_TAC [IMPL_INST_IF_SPLIT,ARM_def,RISCV_def,M0_def,PPC_def]
       \\ CONV_TAC (DEPTH_CONV BETA_CONV)
       \\ REPEAT STRIP_TAC
       \\ CONV_TAC simp \\ REPEAT STRIP_TAC
@@ -552,6 +571,7 @@ fun derive_insts_for sec_name = let
   val base_name = "loop-riscv/example"
   val base_name = "seL4-kernel/riscv/kernel-riscv"
   val base_name = "seL4-kernel/arm/kernel"
+  val base_name = "ppc-test/example"
   val _ = read_files base_name []
   val _ = open_current "test"
   val sec_name = "lookupSlot"
@@ -559,6 +579,7 @@ fun derive_insts_for sec_name = let
   val sec_name = "memcpy"
   val sec_name = "isIRQPending"
   val sec_name = "setMRs_syscall_error"
+  val sec_name = "g"
 
   val thms = derive_insts_for sec_name
 

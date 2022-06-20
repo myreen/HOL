@@ -84,9 +84,10 @@ fun func_decompile print_title sec_name = let
 (*  val thms = clean_conds thms *)
   val code = thms |> hd |> concl |> rator |> rator |> rand
              handle Empty => (case !arch_name of
-                                ARM => ``ARM {}``
-                              | M0 => ``M0 {}``
-                              | RISCV => ``RISCV {}``)
+                                ARM   => ``ARM {}``
+                              | M0    => ``M0 {}``
+                              | RISCV => ``RISCV {}``
+                              | PPC   => ``PPC {}``)
   val lemma = prove(``LIST_IMPL_INST ^code locs []``,
                     SIMP_TAC std_ss [LIST_IMPL_INST_def])
   fun combine [] = lemma
@@ -121,8 +122,9 @@ fun list_mk_union [] = ``{}:'a set``
 fun arch_to_string () =
   case !arch_name of
     RISCV => "riscv"
-  | ARM => "arm"
-  | M0 => "m0";
+  | ARM   => "arm"
+  | M0    => "m0"
+  | PPC   => "ppc";
 
 (*
   val sec_name = "bi_finalise"
@@ -162,7 +164,7 @@ fun prove_funcs_ok names = let
     val goal = th |> concl |> dest_imp |> fst
     val lemma = auto_prove "expand_code" (goal,
       REWRITE_TAC [all_code_def,SUBSET_DEF,IN_UNION,pair_case_of,
-                   ARM_def,M0_def,RISCV_def]
+                   ARM_def,M0_def,RISCV_def,PPC_def]
       \\ CONV_TAC (DEPTH_CONV BETA_CONV)
       \\ REWRITE_TAC [all_code_def,SUBSET_DEF,IN_UNION,pair_case_of]
       \\ CONV_TAC (DEPTH_CONV BETA_CONV)
@@ -258,6 +260,7 @@ fun prove_funcs_ok names = let
   val base_name = "kernel-riscv/kernel-riscv"
   val base_name = "loop-riscv/example"
   val base_name = "seL4-kernel/arm/kernel"
+  val base_name = "ppc-test/example"
   val _ = read_files base_name []
   val _ = open_current "test"
   val sec_name = "lookupSlot"
@@ -268,6 +271,7 @@ fun prove_funcs_ok names = let
   val sec_name = "ndks_boot"
   val sec_name = "num_avail_p_regs"
   val sec_name = "resolveAddressBits"
+  val sec_name = "g"
 
   val names = ["performInvocation_Reply","performInvocation_Endpoint"]
   val names = section_names()

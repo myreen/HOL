@@ -11,6 +11,7 @@ INCLUDES = $(HOLDIR)/examples/l3-machine-code/common \
            $(HOLDIR)/examples/l3-machine-code/arm/decompiler \
            $(HOLDIR)/examples/l3-machine-code/m0/decompiler \
            $(HOLDIR)/examples/l3-machine-code/riscv/decompiler \
+           $(HOLDIR)/examples/machine-code/instruction-set-models/ppc \
            $(HOLDIR)/examples/machine-code/hoare-triple \
            $(HOLDIR)/examples/machine-code/decompiler
 

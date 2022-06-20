@@ -4,7 +4,7 @@ struct
 open HolKernel boolLib bossLib Parse;
 open helperLib backgroundLib writerLib;
 
-datatype arch = ARM | M0 | RISCV
+datatype arch = ARM | M0 | RISCV | PPC
 
 (* refs begin *)
 
@@ -20,7 +20,7 @@ val complete_sections = ref ([]:(string * (* sec_name *)
 (* refs end *)
 
 fun arch_str () =
-  case (!arch_name) of ARM => "ARM" | M0 => "M0" | RISCV => "RISC-V"
+  case (!arch_name) of ARM => "ARM" | M0 => "M0" | RISCV => "RISC-V" | PPC => "PowerPC"
 
 fun HOL_commit () = let
   val path = Globals.HOLDIR
@@ -123,6 +123,9 @@ fun read_complete_sections filename filename_sigs ignore = let
   val is_riscv = let
     val xs = lines_from_file filename
     in exists (fn s => String.isSubstring "riscv" s) xs end
+  val is_ppc = let
+    val xs = lines_from_file filename
+    in exists (fn s => String.isSubstring "powerpc" s) xs end
   (* read in signature file *)
   val ss = lines_from_file filename_sigs
   fun every p [] = true
@@ -187,6 +190,7 @@ fun read_complete_sections filename filename_sigs ignore = let
     fun has_short_instr (_,_,_,lines,_) =
       exists (fn (_,hex,_) => size hex < 8) lines
     in if is_riscv then RISCV else
+       if is_ppc then PPC else
        if exists has_short_instr all_sections then M0 else ARM end
   val _ = (arch_name := arch)
   in complete_sections := sort compare_secs all_sections end
@@ -209,6 +213,7 @@ fun section_length name = length (section_body name) handle HOL_ERR _ => 0
 (*
   val base_name = "loop-riscv/example"
   val base_name = "kernel-riscv/kernel-riscv"
+  val base_name = "ppc-test/example"
   val ignore = [""]
 *)
 
@@ -297,17 +302,22 @@ val () = riscv_progLib.riscv_config true (* set id yo 0 *)
 val riscv_tools = riscv_decompLib.riscv_tools
 val (riscv_spec,_,_,_) = riscv_tools
 
+val ppc_tools = prog_ppcLib.ppc_tools
+val (ppc_spec,_,_,_) = ppc_tools
+
 fun get_tools () =
   case !arch_name of
     ARM   => arm_tools
   | M0    => m0_tools
-  | RISCV => riscv_tools ;
+  | RISCV => riscv_tools
+  | PPC   => ppc_tools ;
 
 fun tysize () =
   case !arch_name of
     ARM   => ``:32``
   | M0    => ``:32``
-  | RISCV => ``:64`` ;
+  | RISCV => ``:64``
+  | PPC   => ``:32`` ;
 
 fun wsize () = ``:^(tysize ()) word``;
 

@@ -1,0 +1,10 @@
+
+example.o:     file format powerpc
+
+
+Disassembly of section .text:
+
+00000000 <g>:
+   0:	7C221A14 	add 1,2,3
+   4:	7C5A2278 	xor 26, 2, 4
+   8:	7C119000 	cmpw 17,18

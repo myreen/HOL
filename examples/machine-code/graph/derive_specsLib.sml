@@ -12,7 +12,8 @@ fun spec_rule x =
   case !arch_name of
     ARM   => arm_spec x
   | M0    => m0_spec x
-  | RISCV => riscv_spec x;
+  | RISCV => riscv_spec x
+  | PPC   => prog_ppcLib.ppc_spec x;
 
 (* code abbrevs *)
 
@@ -491,7 +492,8 @@ fun derive_individual_specs code = let
           (case !arch_name of
              ARM => SKIP_SPEC_ARM
            | M0 => SKIP_SPEC_M0
-           | RISCV => SKIP_SPEC_RISCV), len, SOME len) end
+           | RISCV => SKIP_SPEC_RISCV
+           | PPC => SKIP_SPEC_PPC), len, SOME len) end
 
 (*
   val ((pos,instruction,asm)::code) = code
@@ -758,6 +760,7 @@ fun derive_specs_for sec_name = let
 
   val base_name = "loop-riscv/example"
   val base_name = "kernel-riscv/kernel-riscv"
+  val base_name = "ppc-test/example"
   val _ = read_files base_name []
   val _ = open_current "test"
   val sec_name = "lookupSlot"
@@ -767,6 +770,7 @@ fun derive_specs_for sec_name = let
   val sec_name = "createNewObjects"
   val sec_name = "get_num_avail_p_regs"
   val sec_name = "ensureEmptySlot"
+  val sec_name = "g"
 
   val _ = file_readerLib.show_code sec_name
 

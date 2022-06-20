@@ -10,7 +10,8 @@ fun arch_max_return_words () = let
   val max = (case !arch_name of
                 RISCV => 2
               | ARM => 1
-              | M0 => 1)
+              | M0 => 1
+              | PPC => 1)
   in max end
 
 fun stack_offset_in_fst_arg sec_name = let
@@ -114,7 +115,8 @@ local
     val regs = (case !arch_name of
                   RISCV => ["r3"]
                 | ARM => ["r0","r1","r2","r3","r14"]
-                | M0 => ["r0","r1","r2","r3","r14"])
+                | M0 => ["r0","r1","r2","r3","r14"]
+                | PPC => ["r0"] (* TODO: fix this *))
     in map mk_arb_pair
          (map (fn s => mk_var(s,wty)) regs @
          [``n:bool``, ``z:bool``, ``c:bool``, ``v:bool``]) end
@@ -139,7 +141,8 @@ val tm = u1 |> hd |> snd
       val linkreg = (case !arch_name of
                        RISCV => mk_var("r1",``:word64``)
                      | M0 => mk_var("r14",``:word32``)
-                     | ARM => mk_var("r14",``:word32``))
+                     | ARM => mk_var("r14",``:word32``)
+                     | PPC => mk_var("r1",``:word32``) (* TODO: fix this *))
       val dest = first (fn (x,_) => aconv x linkreg) u1 |> snd handle HOL_ERR _ => T
       in (p1,assum1,call_update(),addr,dest) :: tl res end
 end
@@ -148,7 +151,8 @@ fun find_stack_accesses_for all_summaries sec_name = let
   val sp_var = (case !arch_name of
                   ARM   => ``r13:word32``
                 | M0    => ``r13:word32``
-                | RISCV => ``r2:word64``)
+                | RISCV => ``r2:word64``
+                | PPC   => ``r1:word32``)
   val (init_pc,_,_,_,_) = hd all_summaries
   val state = (init_pc,(sp_var,sp_var)::
               (if stack_offset_in_fst_arg sec_name then

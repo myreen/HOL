@@ -12,12 +12,14 @@ fun STACK_MEMORY_INTRO_RULE th = let
   val pat = case !arch_name of ARM => ``arm_MEMORY d m``
                              | M0 => ``m0_MEMORY d m``
                              | RISCV => ``riscv_MEMORY d m``
+                             | PPC => ``pBYTE_MEMORY d m``
   val x = first (can (match_term pat)) ps
   val d = x |> rator |> rand
   val m = x |> rand
   val th = th |> RW1 [GSYM arm_STACK_MEMORY_def,
                       GSYM m0_STACK_MEMORY_def,
-                      GSYM riscv_STACK_MEMORY_def]
+                      GSYM riscv_STACK_MEMORY_def,
+                      GSYM ppc_STACK_MEMORY_def]
   val th = th |> INST [m |-> mk_var("stack" ,type_of m),
                        d |-> mk_var("dom_stack" ,type_of d)]
   in th end handle HOL_ERR _ => th;
@@ -48,6 +50,7 @@ local
                     ARM => ``arm_REG (R_mode mode 13w) r13``
                   | M0 => ``m0_REG RName_SP_main r13``
                   | RISCV => ``riscv_REG 2w r2``
+                  | PPC => ``pR 1w r1``
     val sp = sp_pat |> rand
     val tm = find_term (can (match_term sp_pat)) q |> rand
     in let val (x,y) = wordsSyntax.dest_word_add tm
