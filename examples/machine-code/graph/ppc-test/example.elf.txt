@@ -1,10 +1,68 @@
 
-example.o:     file format powerpc
+example.o:     file format elf32-powerpc
 
 
 Disassembly of section .text:
 
 00000000 <g>:
-   0:	7C221A14 	add 1,2,3
-   4:	7C5A2278 	xor 26, 2, 4
-   8:	7C119000 	cmpw 17,18
+   0:	94 21 ff e0 	stwu    r1,-32(r1)
+   4:	93 e1 00 1c 	stw     r31,28(r1)
+   8:	7c 3f 0b 78 	mr      r31,r1
+   c:	90 7f 00 0c 	stw     r3,12(r31)
+  10:	81 3f 00 0c 	lwz     r9,12(r31)
+  14:	55 2a 18 38 	rlwinm  r10,r9,3,0,28
+  18:	81 3f 00 0c 	lwz     r9,12(r31)
+  1c:	55 29 07 3e 	clrlwi  r9,r9,28
+  20:	7d 2a 4a 14 	add     r9,r10,r9
+  24:	7d 23 4b 78 	mr      r3,r9
+  28:	39 7f 00 20 	addi    r11,r31,32
+  2c:	83 eb ff fc 	lwz     r31,-4(r11)
+  30:	7d 61 5b 78 	mr      r1,r11
+  34:	4e 80 00 20 	blr
+
+00000038 <f>:
+  38:	94 21 ff d0 	stwu    r1,-48(r1)
+  3c:	7c 08 02 a6 	mflr    r0
+  40:	90 01 00 34 	stw     r0,52(r1)
+  44:	93 c1 00 28 	stw     r30,40(r1)
+  48:	93 e1 00 2c 	stw     r31,44(r1)
+  4c:	7c 3f 0b 78 	mr      r31,r1
+  50:	90 7f 00 0c 	stw     r3,12(r31)
+  54:	90 9f 00 08 	stw     r4,8(r31)
+  58:	81 3f 00 08 	lwz     r9,8(r31)
+  5c:	91 3f 00 1c 	stw     r9,28(r31)
+  60:	48 00 00 30 	b       90 <f+0x58>
+  64:	81 3f 00 1c 	lwz     r9,28(r31)
+  68:	55 29 10 3a 	rlwinm  r9,r9,2,0,29
+  6c:	81 5f 00 0c 	lwz     r10,12(r31)
+  70:	7f ca 4a 14 	add     r30,r10,r9
+  74:	80 7f 00 1c 	lwz     r3,28(r31)
+  78:	48 00 00 01 	bl      78 <f+0x40>
+  7c:	7c 69 1b 78 	mr      r9,r3
+  80:	91 3e 00 00 	stw     r9,0(r30)
+  84:	81 3f 00 1c 	lwz     r9,28(r31)
+  88:	39 29 00 01 	addi    r9,r9,1
+  8c:	91 3f 00 1c 	stw     r9,28(r31)
+  90:	81 3f 00 1c 	lwz     r9,28(r31)
+  94:	2c 09 00 63 	cmpwi   r9,99
+  98:	40 81 ff cc 	ble     64 <f+0x2c>
+  9c:	60 00 00 00 	nop
+  a0:	60 00 00 00 	nop
+  a4:	39 7f 00 30 	addi    r11,r31,48
+  a8:	80 0b 00 04 	lwz     r0,4(r11)
+  ac:	7c 08 03 a6 	mtlr    r0
+  b0:	83 cb ff f8 	lwz     r30,-8(r11)
+  b4:	83 eb ff fc 	lwz     r31,-4(r11)
+  b8:	7d 61 5b 78 	mr      r1,r11
+  bc:	4e 80 00 20 	blr
+
+000000c0 <main>:
+  c0:	94 21 ff e0 	stwu    r1,-32(r1)
+  c4:	93 e1 00 1c 	stw     r31,28(r1)
+  c8:	7c 3f 0b 78 	mr      r31,r1
+  cc:	39 20 00 00 	li      r9,0
+  d0:	7d 23 4b 78 	mr      r3,r9
+  d4:	39 7f 00 20 	addi    r11,r31,32
+  d8:	83 eb ff fc 	lwz     r31,-4(r11)
+  dc:	7d 61 5b 78 	mr      r1,r11
+  e0:	4e 80 00 20 	blr
