@@ -1,7 +1,7 @@
 signature file_readerLib =
 sig
 
-  datatype arch = ARM | M0 | RISCV
+  datatype arch = ARM | M0 | RISCV | PPC
 
   val arch_name : arch ref
   val int_to_hex : int -> string

@@ -8,6 +8,8 @@ open pred_setTheory arithmeticTheory combinTheory;
 open arm_decompTheory set_sepTheory progTheory addressTheory;
 open tripleTheory GraphLangTheory;
 
+val _ = Parse.hide "assert"
+
 val arm_assert_def = Define `
   arm_assert (p,r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,r11,r12,r13,r14,n,z,c,v,
               mode,dmem,memory,dom_stack,stack) =
