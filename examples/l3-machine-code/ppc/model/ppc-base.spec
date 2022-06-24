@@ -48,9 +48,10 @@ declare CTR :: word
 declare PC  :: word
 
 component R (n::ireg) :: word
-{  value = REG n
-   assign value = REG n <- value
+{  value = REG(n)
+   assign value = REG(n) <- value
 }
+
 
 --------------
 -- Main Memory
@@ -67,7 +68,7 @@ component mem (address::word, size::nat) :: bool list
         case 2 => (mem1(address + 1) : mem1(address + 0))<15:0>
         case 4 => (mem1(address + 3) : mem1(address + 2) :
                    mem1(address + 1) : mem1(address + 0))<31:0>
-        case _ => #ASSERT("mem: size in {1, 2, 4}")
+        case _ => #ASSERT("mem: size not in {1, 2, 4}")
       }
    assign value =
       match size
@@ -80,7 +81,7 @@ component mem (address::word, size::nat) :: bool list
                     MEM(address + 2) <- [value<23:16>];
                     MEM(address + 3) <- [value<31:24>]
                   }
-        case _ => #ASSERT("mem: size in {1, 2, 4}")
+        case _ => #ASSERT("mem: size not in {1, 2, 4}")
       }
 }
 
@@ -90,11 +91,9 @@ bool Aligned (w::bits(N), n::nat) = return ( w == Align (w, n) )
 
 component MemA (address::word, size::nat) :: bits(N) with N in 8,16,32
 {  value =
-      -- Sort out aligment
       if not Aligned (address, size) then
       {
-         Raise (HardFault);
-         return UNKNOWN
+         #ASSERT("MemA: unaligned address")
       }
       else
       {
@@ -103,10 +102,9 @@ component MemA (address::word, size::nat) :: bits(N) with N in 8,16,32
       }
 
    assign value =
-      -- Sort out aligment
       if not Aligned (address, size) then
       {
-         Raise (HardFault)
+         #ASSERT("MemA: unaligned address")
       }
       else
          mem(address, size) <- [value]
