@@ -3,23 +3,12 @@ INCLUDES = ../../common ../../lib
 EXTRA_CLEANS = ppc-concat.spec \
                ppcLib.sig ppcLib.sml ppcScript.sml
 
-# Holmake needs to see the HOL files that L3 exports to correctly
-# determine the default targets needed for the remainder of the build.
-#
-# We run the build in two stages to allow this to happen.
-all: stage1
-	Holmake defaults
-
-stage1: ppcScript.sml
-
-defaults: $(DEFAULT_TARGETS)
-
-.PHONY: all stage1 defaults
+all: ppcLib.uo ppcTheory.uo $(DEFAULT_TARGETS)
+.PHONY: all
 
 # Useful intermediate file for debugging.
 ppc-concat.spec: ppc-base.spec ppc-iset.spec ppc-run.spec
 	cat ppc-base.spec ppc-iset.spec ppc-run.spec > $@
 
-# Also generates ppcLib.{sml,sig}
-ppcScript.sml: ppc-concat.spec
+ppcScript.sml ppcLib.sml ppcLib.sig: ppc-concat.spec
 	l3 --eval 'HolExport.spec ("ppc-concat.spec", "ppc");' </dev/null
