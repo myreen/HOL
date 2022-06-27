@@ -1,0 +1,9 @@
+INCLUDES = ../../common ../../lib
+
+all: $(DEFAULT_TARGETS)
+.PHONY: all
+
+ppcScript.sml: ppc-base.spec ppc-iset.spec ppc-run.spec
+	cat ppc-base.spec ppc-iset.spec ppc-run.spec > tmp.spec
+	l3 --eval 'HolExport.spec ("tmp.spec", "ppc");' </dev/null
+	rm -f tmp.spec
