@@ -19,6 +19,7 @@ type word = bits(32)
 
 exception ASSERT :: string
 exception UNPREDICTABLE :: string
+exception UNDEFINED :: string * word
 
 ---------------------------------
 -- Memory mapped system registers
