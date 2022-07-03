@@ -29,7 +29,7 @@ val rhsc = utilsLib.rhsc
 fun mapl x = utilsLib.augment x [[]]
 
 fun MATCH_HYP_RW l = utilsLib.MATCH_HYP_CONV_RULE (REWRITE_CONV l)
-val REG_CONV = REWRITE_CONV [v2w_13_15_rwts, v2w_ground4]
+val REG_CONV = REWRITE_CONV [v2w_13_15_rwts, v2w_ground4, v2w_ground5]
 
 val opcodes     = utilsLib.list_mk_wordii 4 (List.tabulate (16, Lib.I))
 val arithlogic  = utilsLib.list_mk_wordii 4 [0,1,2,3,4,5,6,7,12,14]
@@ -665,7 +665,7 @@ local
    val rw = REWRITE_CONV (gen_rws "decode PPC" rwts_32)
    val FALL_CONV =
        REWRITE_CONV
-           (datatype_thms [v2w_ground4] @
+           (datatype_thms [v2w_ground4,v2w_ground5] @
             gen_rws "decode PPC (fallback)" [DecodeInst])
 in
    fun ppc_decode v =
@@ -692,8 +692,6 @@ val ppc_decode_hex = ppc_decode o mk_bool_list o hex_to_bits;
 (*
 
 ppc_decode_hex "7C221A14" (* add 1,2,3 *)
-
-TODO: fix REG_CONV for 5-bit regs
 
 *)
 

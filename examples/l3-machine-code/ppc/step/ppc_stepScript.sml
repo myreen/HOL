@@ -706,6 +706,7 @@ fun enumerate_v2w n =
 
 val v2w_ground2 = Theory.save_thm("v2w_ground2", enumerate_v2w 2)
 val v2w_ground4 = Theory.save_thm("v2w_ground4", enumerate_v2w 4)
+val v2w_ground5 = Theory.save_thm("v2w_ground5", enumerate_v2w 5)
 
 val Decode_simp_extra = Q.prove(
    `w2n (v2w [b2; b1; b0] : word3) = w2n (v2w [F; b2; b1; b0] : word4)`,
