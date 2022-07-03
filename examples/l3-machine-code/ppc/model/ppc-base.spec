@@ -1,5 +1,5 @@
 -- Bare-bones PPC skeleton
--- Originally based on 
+-- Originally based on
 
 -- Preliminaries
 
@@ -66,21 +66,21 @@ component mem (address::word, size::nat) :: bool list
 {  value =
       match size
       { case 1 => (mem1(address + 0))<7:0>
-        case 2 => (mem1(address + 1) : mem1(address + 0))<15:0>
-        case 4 => (mem1(address + 3) : mem1(address + 2) :
-                   mem1(address + 1) : mem1(address + 0))<31:0>
+        case 2 => (mem1(address + 0) : mem1(address + 1))<15:0>
+        case 4 => (mem1(address + 0) : mem1(address + 1) :
+                   mem1(address + 2) : mem1(address + 3))<31:0>
         case _ => #ASSERT("mem: size not in {1, 2, 4}")
       }
    assign value =
       match size
       { case 1 =>   MEM(address + 0) <- [value<7:0>]
-        case 2 => { MEM(address + 0) <- [value<7:0>];
-                    MEM(address + 1) <- [value<15:8>]
+        case 2 => { MEM(address + 1) <- [value<7:0>];
+                    MEM(address + 0) <- [value<15:8>]
                   }
-        case 4 => { MEM(address + 0) <- [value<7:0>];
-                    MEM(address + 1) <- [value<15:8>];
-                    MEM(address + 2) <- [value<23:16>];
-                    MEM(address + 3) <- [value<31:24>]
+        case 4 => { MEM(address + 3) <- [value<7:0>];
+                    MEM(address + 2) <- [value<15:8>];
+                    MEM(address + 1) <- [value<23:16>];
+                    MEM(address + 0) <- [value<31:24>]
                   }
         case _ => #ASSERT("mem: size not in {1, 2, 4}")
       }
