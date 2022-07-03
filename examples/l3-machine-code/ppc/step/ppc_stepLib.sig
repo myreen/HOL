@@ -1,13 +1,19 @@
 signature ppc_stepLib =
 sig
 
+(*
    val ppc_instruction: Term.term -> string
-   val ppc_step: bool * bool -> string -> Thm.thm list
+*)
+   val ppc_step: string -> Thm.thm list
+(*
    val ppc_step_code: bool * bool -> string quotation -> Thm.thm list list
-   val ppc_step_hex: bool * bool -> string -> Thm.thm list
+*)
+   val ppc_step_hex: string -> Thm.thm list
+(*
    val ppc_decode: bool -> Term.term -> Thm.thm list
    val ppc_decode_hex: bool -> string -> Thm.thm list
-   val hex_to_bits: string -> Term.term
+*)
+   val hex_to_bits: string -> Term.term list
    val list_instructions: unit -> (string * Term.term) list
    val print_instructions: unit -> unit
 
