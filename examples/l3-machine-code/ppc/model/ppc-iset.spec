@@ -16,6 +16,24 @@ define B (target :: bits(24)) =
    BranchTo (next)
 }
 
+define Addi (d :: ireg, a :: ireg, si :: bits(32)) =
+{
+   R (d) <- if a == 0 then si else R(a) + si;
+   IncPC ()
+}
+
+define Or (a :: ireg, s :: ireg, b :: ireg) =
+{
+   R (a) <- R (s) || R (b);
+   IncPC ()
+}
+
+define Ori (a :: ireg, s :: ireg, ui :: bits(32)) =
+{
+   R (a) <- R (s) || ui;
+   IncPC ()
+}
+
 -------------------------------------------------------
 -- Stubs for Hints and other Miscellaneous instructions
 -------------------------------------------------------
