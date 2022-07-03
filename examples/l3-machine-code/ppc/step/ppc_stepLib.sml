@@ -967,16 +967,6 @@ local
 
    val not_ppc2_test_tm = boolSyntax.mk_neg ppc2_test_tm
 
-   val byte_tms = List.map fix_datatype
-      [``^st.MEM (^st.PC) = ^(mk_byte 0)``,
-       ``^st.MEM (^st.PC + 1w) = ^(mk_byte 8)``,
-       ``^st.MEM (^st.PC + 2w) = ^(mk_byte 16)``,
-       ``^st.MEM (^st.PC + 3w) = ^(mk_byte 24)``]
-
-   val fetch_ppc_rwts =
-      EV [Fetch_def,MemA_4_rwt] [[not_ppc2_test_tm], [ppc2_test_tm]] []
-         ``Fetch``
-
    fun bytes4 l =
       let
          val (b1, l) = Lib.split_after 8 l
@@ -1173,35 +1163,31 @@ local
                       THENC Conv.DEPTH_CONV bitstringLib.v2n_CONV
                       THENC REWRITE_CONV [bitstringTheory.n2w_v2n]))
    val rwconv = REWRITE_CONV rewrites
+   val x = (DATATYPE_CONV, fix_datatypes [])
+   fun gen_rws m r = rewrites @ utilsLib.specialized m x r
+   val rw = REWRITE_CONV (gen_rws "decode PPC" rwts_32)
+   val FALL_CONV =
+       REWRITE_CONV
+           (datatype_thms [v2w_ground4] @
+            gen_rws "decode PPC (fallback)" [DecodeInst])
 in
-   val ppc_decode =
-      let
-         val x = (DATATYPE_CONV, fix_datatypes [])
-         fun gen_rws m r = rewrites @ utilsLib.specialized m x r
-         val rw = REWRITE_CONV (gen_rws "decode PPC" rwts_32)
-         val FALL_CONV =
-            REWRITE_CONV
-               (datatype_thms [v2w_ground4] @
-                gen_rws "decode PPC (fallback)" [DecodeInst])
-      in
-         fn v =>
-            let
-               val tm = mk_decode_ppc (mk_opcode v)
-            in
-               (rw tm
-                handle Conv.UNCHANGED =>
-                           (WARN "ppc_decode" "fallback (slow) decode"
-                            ; FALL_CONV tm))
-               |> utilsLib.split_conditions
-               |> avoid
-               |> FINISH_RULE
-               |> (fn l => if List.null l
-                              then raise ERR "ppc_decode"
-                                         ("unpredictable: " ^
-                                          utilsLib.long_term_to_string v)
-                           else l)
-            end
-      end
+   fun ppc_decode v =
+       let
+           val tm = mk_decode_ppc (mk_opcode v)
+       in
+           (rw tm
+            handle Conv.UNCHANGED =>
+                   (WARN "ppc_decode" "fallback (slow) decode"
+                  ; FALL_CONV tm))
+           |> utilsLib.split_conditions
+           |> avoid
+           |> FINISH_RULE
+           |> (fn l => if List.null l
+                          then raise ERR "ppc_decode"
+                                     ("unpredictable: " ^
+                                      utilsLib.long_term_to_string v)
+                       else l)
+       end
 end
 
 val ppc_decode_hex = ppc_decode o mk_bool_list o hex_to_bits;
@@ -1573,31 +1559,26 @@ local
    val eval_simp_rule =
       REWRITE_RULE conc_rwts o
       utilsLib.ALL_HYP_CONV_RULE (REWRITE_CONV hyps_rwts)
-   fun ev tm =
-      fn rwt =>
-         let
-            val thm = eval_simp_rule (utilsLib.INST_REWRITE_CONV1 rwt tm)
-         in
-            if utilsLib.vacuous thm then NONE else SOME thm
-         end
+   fun ev tm rwt =
+       let
+           val thm = eval_simp_rule (utilsLib.INST_REWRITE_CONV1 rwt tm)
+       in
+           if utilsLib.vacuous thm then NONE else SOME thm
+       end
+   val net = utilsLib.mk_rw_net utilsLib.lhsc (getThms [])
 in
-   val eval =
-      let
-         val net = utilsLib.mk_rw_net utilsLib.lhsc (getThms [])
-      in
-         fn tm =>
-            (case List.mapPartial (ev tm) (utilsLib.find_rw net tm) of
-                [] => raise ERR "eval" "no valid step theorem"
-              | [x] => x
-              | l => (Parse.print_term tm
-                      ; print "\n"
-                      ; raise ERR "eval" "more than one valid step theorem"))
-            handle HOL_ERR {message = "not found",
-                            origin_function = "find_rw", ...} =>
-               raise (Parse.print_term tm
-                      ; print "\n"
-                      ; ERR "eval" "instruction instance not supported")
-      end
+   fun eval tm =
+       (case List.mapPartial (ev tm) (utilsLib.find_rw net tm) of
+            [] => raise ERR "eval" "no valid step theorem"
+          | [x] => x
+          | l => (Parse.print_term tm
+                ; print "\n"
+                ; raise ERR "eval" "more than one valid step theorem"))
+       handle HOL_ERR {message = "not found",
+                       origin_function = "find_rw", ...} =>
+              raise (Parse.print_term tm
+                   ; print "\n"
+                   ; ERR "eval" "instruction instance not supported")
 end
 
 (*
@@ -1668,38 +1649,23 @@ local
    fun isConditional s =
       3 <= String.size s andalso
       Redblackset.member (conditional, String.extract (s, 0, SOME 3))
-   val mk_ev =
-      let
-         val ev = eval_ppc
-      in
-         fn (s,v) =>
-            if isConditional s
-            then [ev 1 v, ev 0 v]
-            else [ev 0 v]
-      end
+   fun ev (s,v) =
+       if isConditional s
+       then [eval_ppc 1 v, eval_ppc 0 v]
+       else [eval_ppc 0 v]
 in
-   val ppc_step =
-      let
-         val ev = mk_ev
-      in
-         fn s =>
-            let
-               val v = mk_ppc_opcode s
-            in
-               ev (s, v)
-            end
-      end
-   val ppc_step_hex =
-      let
-         val ev = mk_ev
-      in
-         fn h =>
-            let
-               val v = mk_bool_list (hex_to_bits h)
-            in
-               ev ("", v)
-            end
-      end
+   fun ppc_step s =
+       let
+           val v = mk_ppc_opcode s
+       in
+           ev (s, v)
+       end
+   fun ppc_step_hex h =
+       let
+           val v = mk_bool_list (hex_to_bits h)
+       in
+           ev ("", v)
+       end
 end
 
 (*
