@@ -4,9 +4,9 @@
 
 -- Instruction semantics
 
-define Add (d :: ireg, a :: ireg, b :: ireg) =
+define Add (rt :: ireg, ra :: ireg, rb :: ireg) =
 {
-   R (d) <- R (a) + R (b);
+   R (rt) <- R (ra) + R (rb);
    IncPC ()
 }
 

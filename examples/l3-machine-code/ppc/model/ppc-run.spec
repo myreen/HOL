@@ -23,22 +23,22 @@ MachineCode Fetch =
 -----------------------
 
 pattern {
-   A ` 5
-   B ` 5
-   C ` 5
-   D ` 5
-   imm2 ` 2
-   imm3 ` 3
-   imm4 ` 4
-   imm5 ` 5
-   imm6 ` 6
-   imm7 ` 7
-   imm8 ` 8
-   imm11 ` 11
+   RA ` 5
+   RB ` 5
+   RT ` 5
 }
 
 -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 -- 32-bit Instruction Decoder
+--
+-- Instruction definitions based upon reference document
+--   "Power ISA / Version 3.1B / September 14, 2021"
+--   OPF_PowerISA_v3.1B.pdf
+-- as found at
+--   https://files.openpower.foundation/s/dAYSdGzTfW4j2r2
+--
+-- Page numbers are listed as found in page footers and
+-- index entries; page '1' follows page 'xxvi'.
 -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 instruction DecodeInst (w::word) =
@@ -46,13 +46,14 @@ instruction DecodeInst (w::word) =
    match w
    {
      -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     -- ADD D, A, B (??)
+     -- ADD RT, RA, RB (p77)
      -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     case '011111 D A B 01000010100' =>
-        {  d = [D];
-           a = [A];
-           b = [B];
-           Add (d, a, b)
+     case '011111 RT RA RB 0 100001010 0' =>
+        {
+           rt = [RT];
+           ra = [RA];
+           rb = [RB];
+           Add (rt, ra, rb)
         }
 
 
