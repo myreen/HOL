@@ -10,6 +10,12 @@ define Add (rt :: ireg, ra :: ireg, rb :: ireg) =
    IncPC ()
 }
 
+define B (target :: bits(24)) =
+{
+   next = PC + SignExtend(target : '00');
+   BranchTo (next)
+}
+
 -------------------------------------------------------
 -- Stubs for Hints and other Miscellaneous instructions
 -------------------------------------------------------
