@@ -111,6 +111,7 @@ component MemA (address::word, size::nat) :: bits(N) with N in 8,16,32
          mem(address, size) <- [value]
 }
 
+-- Unclear how/where this should be used at present.
 component MemU (address::word, size::nat) :: bits(N) with N in 8,16,32
 {
    value = MemA(address, size)
@@ -123,10 +124,8 @@ component MemU (address::word, size::nat) :: bits(N) with N in 8,16,32
 
 unit BranchTo (address::word) = PC <- address
 
-unit IncPC() = BranchTo (PC + 4)
+unit IncPC () = BranchTo (PC + 4)
 
 --------------------------------
 -- Bit and arithmetic operations
 --------------------------------
-
--- Decode 1 instruction?
