@@ -699,10 +699,18 @@ ppc_decode_hex "7C221A14" (* add 1,2,3 *)
 
 (* Run *)
 
-val _ =
-  EV [dfn'Add_def,write'R_def,IncPC_rwt,R_def] [] []
-  “dfn'Add (d,a,b) s”
-  |> addThms;
+fun add_simple_dfn th = let
+  val tm = th |> SPEC_ALL |> concl |> dest_eq |> fst
+  val tm2 = mk_comb(tm,st)
+  val lemma = EV [th,write'R_def,IncPC_rwt,R_def] [] [] tm2
+  val _ = addThms lemma
+  in lemma end
+
+val res = map add_simple_dfn
+  [dfn'Add_def
+  ,dfn'Addi_def
+  ,dfn'Or_def
+  ,dfn'Ori_def]
 
 (* Evaluator *)
 
@@ -756,7 +764,8 @@ local
          TypeBasePure.mk_recordtype_fieldsel
            {tyname = "ppc_state", fieldname = "exception"}
    fun mk_proj_exception r = Term.mk_comb (state_exception_tm, r)
-   val MP_Next = Drule.MATCH_MP (ppc_stepTheory.NextStatePPC |> UNDISCH)
+   val MP_Next = REWRITE_RULE [wordsTheory.WORD_OR_CLAUSES, wordsTheory.w2w_0] o
+                 Drule.MATCH_MP (ppc_stepTheory.NextStatePPC |> UNDISCH)
    val Run_CONV = utilsLib.Run_CONV ("ppc", st) o get_val
    fun is_ineq tm =
       boolSyntax.is_eq (boolSyntax.dest_neg tm) handle HOL_ERR _ => false
@@ -774,7 +783,6 @@ in
                val thm1 = ftch v
                val thm2 = List.nth (dec v, n)
                val thm3 = Run_CONV thm2
-
                val thm4 = thm3 |> Drule.SPEC_ALL |> rhsc |> eval
                val ineq_hyps =
                   List.mapPartial
@@ -837,7 +845,41 @@ fun ppc_step_code config =
 
 val h = "7C221A14" (* add 1,2,3 *)
 
-ppc_step_hex "7C221A14"
+ppc_step_hex h
+
+val h = "7c3f0b78"; (* mr r31,r1 *)
+val h = "7d234b78"; (* mr r3,r9 *)
+val h = "7d615b78"; (* mr r1,r11 *)
+val h = "7c3f0b78"; (* mr r31,r1 *)
+val h = "7c691b78"; (* mr r9,r3 *)
+val h = "7d615b78"; (* mr r1,r11 *)
+val h = "7c3f0b78"; (* mr r31,r1 *)
+val h = "7d234b78"; (* mr r3,r9 *)
+val h = "7d615b78"; (* mr r1,r11 *)
+
+ppc_step_hex h
+
+   ("0 1 1 1 1 1 S A B 0 1 1 0 1 1 1 1 0 0 0",
+     (\v. Por (b2w v "A") (b2w v "S") (b2w v "B")));
+
+val h = "60000000"; (* nop *)
+val h = "60000000"; (* nop *)
+
+ppc_step_hex h
+
+   ("0 1 1 0 0 0 S A UIMM",   (* UIMM is 16 bits *)
+     (\v. Pori (b2w v "A") (b2w v "S") (b2w v "UIMM")));
+
+val h = "397f0030"; (* addi r11,r31,48 *)
+val h = "397f0020"; (* addi r11,r31,32 *)
+val h = "39290001"; (* addi r9,r9,1 *)
+val h = "397f0020"; (* addi r11,r31,32 *)
+
+ppc_step_hex h
+
+   ("0 0 1 1 1 0 D A SIMM",  (* SIMM 16 bit *)
+     (\v. Paddi (b2w v "D") (b2w v "A") (b2w v "SIMM")));
+
 
 *)
 

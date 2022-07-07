@@ -1051,4 +1051,10 @@ QED
 Theorem IMP_Fetch =
   REWRITE_RULE [GSYM AND_IMP_INTRO] IMP_Fetch  |> UNDISCH_ALL;
 
+Theorem nop_simp:
+  (s with <|PC := w; REG := s.REG⦇0w ↦ s.REG 0w⦈|>) = (s with <|PC := w|>)
+Proof
+  fs [ppcTheory.ppc_state_component_equality]
+QED
+
 val () = export_theory ()

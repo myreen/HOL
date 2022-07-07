@@ -22,7 +22,7 @@ define Addi (d :: ireg, a :: ireg, si :: bits(32)) =
    IncPC ()
 }
 
-define Or (a :: ireg, s :: ireg, b :: ireg) =
+define Or (s :: ireg, a :: ireg, b :: ireg) =
 {
    R (a) <- R (s) || R (b);
    IncPC ()
