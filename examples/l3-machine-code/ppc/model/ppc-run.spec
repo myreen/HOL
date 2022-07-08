@@ -26,12 +26,9 @@ pattern {
    RA ` 5
    RB ` 5
    RT ` 5
+   RD ` 5
+   RS ` 5
    imm24 ` 24
-   A ` 5
-   B ` 5
-   C ` 5
-   D ` 5
-   S ` 5
    imm2 ` 2
    imm3 ` 3
    imm4 ` 4
@@ -79,13 +76,14 @@ instruction DecodeInst (w::word) =
      case '010010 imm24 0 0' =>
         {
            B (imm24)
+        }
 
      -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      -- addi D A SIMM
      -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     case '001110 D A SIMM' =>
-        {  d = [D];
-           a = [A];
+     case '001110 RD RA SIMM' =>
+        {  d = [RD];
+           a = [RA];
            imm32 = SignExtend (SIMM);
            Addi (d, a, imm32)
         }
@@ -93,19 +91,19 @@ instruction DecodeInst (w::word) =
      -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      -- or S A B
      -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     case '011111 S A B 01101111000' =>
-        {  s = [S];
-           a = [A];
-           b = [B];
+     case '011111 RS RA RB 01101111000' =>
+        {  s = [RS];
+           a = [RA];
+           b = [RB];
            Or (s, a, b)
         }
 
      -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      -- ori S A UIMM
      -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     case '011000 S A UIMM' =>
-        {  s = [S];
-           a = [A];
+     case '011000 RS RA UIMM' =>
+        {  s = [RS];
+           a = [RA];
            imm32 = ZeroExtend (UIMM);
            Ori (s, a, imm32)
         }
