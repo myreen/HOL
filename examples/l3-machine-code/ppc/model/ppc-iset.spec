@@ -34,6 +34,16 @@ define Ori (a :: ireg, s :: ireg, ui :: bits(32)) =
    IncPC ()
 }
 
+define Lwzx (rt :: ireg, ra :: ireg, rb :: ireg) =
+{
+   b = if ra == 0 then 0 else R (ra);
+   EA = b + R (rb);
+   -- DISCREPANCY: The spec defines this operation for 64-bit registers,
+   -- not the 32-bit registers found in this model, so we omit the "zero
+   -- the upper half of the register" step.
+   R (rt) <- [mem (EA, 4)]
+}
+
 -------------------------------------------------------
 -- Stubs for Hints and other Miscellaneous instructions
 -------------------------------------------------------
