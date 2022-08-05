@@ -10,9 +10,25 @@ define Add (rt :: ireg, ra :: ireg, rb :: ireg) =
    IncPC ()
 }
 
-define B (target :: bits(24)) =
+define B (target :: bits(24), lr :: bool) =
 {
+   LR <- if lr then PC + 4 else LR;
    next = PC + SignExtend(target : '00');
+   BranchTo (next)
+}
+
+define Bc (bo :: bits(5), bi :: bits(5), target :: bits(14), lr :: bool) =
+{
+   cond_met = branch_cond_met(bo, bi);
+   LR <- if lr and cond_met then PC + 4 else LR;
+   next = if cond_met then PC + SignExtend(target : '00') else PC + 4;
+   BranchTo (next)
+}
+
+define Blr (bo :: bits(5), bi :: bits(5)) =
+{
+   cond_met = branch_cond_met(bo, bi);
+   next = if cond_met then LR else PC + 4;
    BranchTo (next)
 }
 

@@ -7,7 +7,7 @@
 -- Word sizes (32-bit architecture)
 -----------------------------------
 
-type crbit = bits(2)
+type crbit = bits(5)
 type ireg  = bits(5)
 type freg  = bits(5)
 type byte = bits(8)
@@ -39,9 +39,9 @@ exception UNDEFINED :: string * word
 
 -- [deleted]
 
--------------------------------------
--- General Purpose Registers (banked)
--------------------------------------
+----------------------------
+-- General Purpose Registers
+----------------------------
 
 declare REG :: ireg -> word
 declare LR  :: word
@@ -53,6 +53,23 @@ component R (n::ireg) :: word
    assign value = REG(n) <- value
 }
 
+-----------------------------------------
+-- First 3 bits of the Condition Register
+-----------------------------------------
+
+declare CR0 :: bool
+declare CR1 :: bool
+declare CR2 :: bool
+
+component CR (n::crbit) :: bool
+{  value = { if n == 0 then CR0 else
+             if n == 1 then CR1 else
+             if n == 2 then CR2 else #ASSERT("bad CR bit") }
+   assign value =
+           { if n == 0 then CR0 <- value else
+             if n == 1 then CR1 <- value else
+             if n == 2 then CR2 <- value else #ASSERT("bad CR bit") }
+}
 
 --------------
 -- Main Memory
@@ -125,6 +142,14 @@ component MemU (address::word, size::nat) :: bits(N) with N in 8,16,32
 unit BranchTo (address::word) = PC <- address
 
 unit IncPC () = BranchTo (PC + 4)
+
+bool branch_cond_met (bo :: bits(5), bi :: bits(5)) =
+  {
+    if bo && 16 == 16 then true else
+    if bo && 8 == 8 then CR (bi) else
+    if bo && 4 == 4 then not (CR (bi)) else
+      #ASSERT("condition code not modelled")
+  }
 
 --------------------------------
 -- Bit and arithmetic operations
