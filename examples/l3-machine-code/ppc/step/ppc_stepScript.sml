@@ -866,6 +866,15 @@ val FST_SWAP = Q.store_thm("FST_SWAP",
    Cases \\ simp [pairTheory.SWAP_def]
    )
 
+Theorem ppc_step_simps:
+  (f⦇x ↦ f x⦈ = f) ∧
+  ((s with <|PC := y; REG := s.REG|>) = s with PC := y) ∧
+  ((n2w n = (n2w m):word5) <=> (n MOD 32 = m MOD 32))
+Proof
+  rw []
+  \\ fs [ppc_state_component_equality]
+QED
+
 (*
 
 (* ------------------------------------------------------------------------ *)

@@ -764,7 +764,8 @@ local
          TypeBasePure.mk_recordtype_fieldsel
            {tyname = "ppc_state", fieldname = "exception"}
    fun mk_proj_exception r = Term.mk_comb (state_exception_tm, r)
-   val MP_Next = REWRITE_RULE [wordsTheory.WORD_OR_CLAUSES, wordsTheory.w2w_0] o
+   val MP_Next = SIMP_RULE std_ss [wordsTheory.WORD_OR_CLAUSES, wordsTheory.w2w_0,
+                                   ppc_step_simps] o
                  Drule.MATCH_MP (ppc_stepTheory.NextStatePPC |> UNDISCH)
    val Run_CONV = utilsLib.Run_CONV ("ppc", st) o get_val
    fun is_ineq tm =
@@ -846,40 +847,6 @@ fun ppc_step_code config =
 val h = "7C221A14" (* add 1,2,3 *)
 
 ppc_step_hex h
-
-val h = "7c3f0b78"; (* mr r31,r1 *)
-val h = "7d234b78"; (* mr r3,r9 *)
-val h = "7d615b78"; (* mr r1,r11 *)
-val h = "7c3f0b78"; (* mr r31,r1 *)
-val h = "7c691b78"; (* mr r9,r3 *)
-val h = "7d615b78"; (* mr r1,r11 *)
-val h = "7c3f0b78"; (* mr r31,r1 *)
-val h = "7d234b78"; (* mr r3,r9 *)
-val h = "7d615b78"; (* mr r1,r11 *)
-
-ppc_step_hex h
-
-   ("0 1 1 1 1 1 S A B 0 1 1 0 1 1 1 1 0 0 0",
-     (\v. Por (b2w v "A") (b2w v "S") (b2w v "B")));
-
-val h = "60000000"; (* nop *)
-val h = "60000000"; (* nop *)
-
-ppc_step_hex h
-
-   ("0 1 1 0 0 0 S A UIMM",   (* UIMM is 16 bits *)
-     (\v. Pori (b2w v "A") (b2w v "S") (b2w v "UIMM")));
-
-val h = "397f0030"; (* addi r11,r31,48 *)
-val h = "397f0020"; (* addi r11,r31,32 *)
-val h = "39290001"; (* addi r9,r9,1 *)
-val h = "397f0020"; (* addi r11,r31,32 *)
-
-ppc_step_hex h
-
-   ("0 0 1 1 1 0 D A SIMM",  (* SIMM 16 bit *)
-     (\v. Paddi (b2w v "D") (b2w v "A") (b2w v "SIMM")));
-
 
 *)
 
