@@ -869,10 +869,37 @@ val FST_SWAP = Q.store_thm("FST_SWAP",
 Theorem ppc_step_simps:
   (f⦇x ↦ f x⦈ = f) ∧
   ((s with <|PC := y; REG := s.REG|>) = s with PC := y) ∧
-  ((n2w n = (n2w m):word5) <=> (n MOD 32 = m MOD 32))
+  ((s with <|PC := w; LR := s.LR|>) = (s with <|PC := w|>)) ∧
+  ((n2w n = (n2w m):word5) <=> (n MOD 32 = m MOD 32)) ∧
+  (1w ≠ 0w:word1) ∧
+  (0w ≠ 1w:word1)
 Proof
   rw []
   \\ fs [ppc_state_component_equality]
+QED
+
+Theorem branch_cond_always_met:
+  (FST (branch_cond_met (20w,0w) s) = T) ∧
+  (SND (branch_cond_met (20w,0w) s) = s)
+Proof
+  fs [branch_cond_met_def]
+QED
+
+Theorem branch_cond_met_simp:
+  (FST (branch_cond_met (4w,0w) s) = ¬s.CR0) ∧
+  (FST (branch_cond_met (4w,1w) s) = ¬s.CR1) ∧
+  (FST (branch_cond_met (4w,2w) s) = ¬s.CR2) ∧
+  (SND (branch_cond_met (4w,0w) s) = s) ∧
+  (SND (branch_cond_met (4w,1w) s) = s) ∧
+  (SND (branch_cond_met (4w,2w) s) = s) ∧
+  (FST (branch_cond_met (8w,0w) s) = s.CR0) ∧
+  (FST (branch_cond_met (8w,1w) s) = s.CR1) ∧
+  (FST (branch_cond_met (8w,2w) s) = s.CR2) ∧
+  (SND (branch_cond_met (8w,0w) s) = s) ∧
+  (SND (branch_cond_met (8w,1w) s) = s) ∧
+  (SND (branch_cond_met (8w,2w) s) = s)
+Proof
+  fs [branch_cond_met_def,CR_def]
 QED
 
 (*

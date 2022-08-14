@@ -710,7 +710,10 @@ val res = map add_simple_dfn
   [dfn'Add_def
   ,dfn'Addi_def
   ,dfn'Or_def
-  ,dfn'Ori_def]
+  ,dfn'Ori_def
+  ,dfn'B_def
+  ,dfn'Bc_def
+  ,dfn'Blr_def]
 
 (* Evaluator *)
 
@@ -754,6 +757,9 @@ end
 val v = (mk_bool_list o hex_to_bits) "7C221A14" (* add 1,2,3 *)
 *)
 
+val EXPAND_CONV =
+  SIMP_CONV std_ss [BranchTo_def]
+
 local
    val u2 = wordsSyntax.mk_wordii (2, 32)
    val u4 = wordsSyntax.mk_wordii (4, 32)
@@ -764,13 +770,19 @@ local
          TypeBasePure.mk_recordtype_fieldsel
            {tyname = "ppc_state", fieldname = "exception"}
    fun mk_proj_exception r = Term.mk_comb (state_exception_tm, r)
-   val MP_Next = SIMP_RULE std_ss [wordsTheory.WORD_OR_CLAUSES, wordsTheory.w2w_0,
+   fun eval_sw2sw th = let
+     val tms = find_terms wordsSyntax.is_sw2sw (concl th)
+     in REWRITE_RULE (map EVAL tms) th end
+   val MP_Next = eval_sw2sw o
+                 SIMP_RULE std_ss [wordsTheory.WORD_OR_CLAUSES, wordsTheory.w2w_0,
                                    ppc_step_simps] o
+                 CONV_RULE EXPAND_CONV o
                  Drule.MATCH_MP (ppc_stepTheory.NextStatePPC |> UNDISCH)
    val Run_CONV = utilsLib.Run_CONV ("ppc", st) o get_val
    fun is_ineq tm =
       boolSyntax.is_eq (boolSyntax.dest_neg tm) handle HOL_ERR _ => false
    val n = 0
+   val pat = “FST (branch_cond_met _ _)”
 in
    val eval_ppc =
       let
@@ -800,25 +812,24 @@ in
                          (Parse.print_thm thm4
                           ; print "\n"
                           ; raise ERR "eval_ppc" "failed to fully evaluate")
-               val thm5 = STATE_CONV (mk_proj_exception r)
+               val thm5 = (EXPAND_CONV THENC STATE_CONV) (mk_proj_exception r)
                val thm = Drule.LIST_CONJ [thm1, thm2, thm3, thm4, thm5]
+                         |> SIMP_RULE std_ss [branch_cond_always_met]
+               val thms = let
+                 val tm = find_term (can (match_term pat)) (concl thm)
+                 val thm1 = DISCH tm thm |> SIMP_RULE std_ss []
+                            |> SIMP_RULE std_ss [branch_cond_met_simp] |> UNDISCH
+                 val thm2 = DISCH (mk_neg tm) thm |> SIMP_RULE std_ss []
+                            |> SIMP_RULE std_ss [branch_cond_met_simp] |> UNDISCH
+                 in [thm1, thm2] end handle HOL_ERR _ => [thm]
             in
-               mp thm
+               map mp thms
             end
       end
 end
 
 local
-   val conditional = Redblackset.fromList String.compare
-      ["BEQ", "BNE", "BCS", "BCC", "BMI", "BPL", "BVS",
-       "BVC", "BHI", "BLS", "BGE", "BLT", "BGT", "BLE"]
-   fun isConditional s =
-      3 <= String.size s andalso
-      Redblackset.member (conditional, String.extract (s, 0, SOME 3))
-   fun ev (s,v) =
-       if isConditional s
-       then [eval_ppc 1 v, eval_ppc 0 v]
-       else [eval_ppc 0 v]
+   fun ev (s,v) = eval_ppc 0 v
 in
    fun ppc_step s =
        let
@@ -844,7 +855,13 @@ fun ppc_step_code config =
 
 (* testing:
 
-val h = "7C221A14" (* add 1,2,3 *)
+val h = "7C221A14"; (* add 1,2,3 *)
+val h = "48000030"; (* b 90 <f+0x58> *)
+val h = "48000001"; (* bl 78 <f+0x40> *)
+val h = "4e800020"; (* blr *)
+val h = "4081ffcc"; (* ble 64 <f+0x2c> *)
+
+val v = mk_bool_list (hex_to_bits h)
 
 ppc_step_hex h
 
