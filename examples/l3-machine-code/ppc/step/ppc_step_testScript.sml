@@ -318,8 +318,8 @@ QED
 
 Theorem mask_test:
   (* based on https://devblogs.microsoft.com/oldnewthing/20180810-00/?p=99465 *)
-  mask(2w,1w) = 0xFFFFFFFFw ∧
-  mask (6w,20w) = 0x3FFF800w ∧
+  mask (2w,1w)  = 0xFFFFFFFFw ∧
+  mask (6w,20w) = 0x03FFF800w ∧
   mask (20w,6w) = 0xFE000FFFw
 Proof
   EVAL_TAC
