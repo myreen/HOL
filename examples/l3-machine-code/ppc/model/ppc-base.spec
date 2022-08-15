@@ -154,3 +154,15 @@ bool branch_cond_met (bo :: bits(5), bi :: bits(5)) =
 --------------------------------
 -- Bit and arithmetic operations
 --------------------------------
+
+bits(32) mask(mb :: bits(5), me ::bits(5)) =
+{
+    (b::nat) = [mb];
+    (e::nat) = [me];
+    if b < e+1 then
+      ((~0) << b >>+ b) >>+ (31 - e) << (31 - e)
+    else if b == e+1 then
+      ~0
+    else
+      ((~0) << (32 - (e + 1))) || ((~0) >>+ b)
+}

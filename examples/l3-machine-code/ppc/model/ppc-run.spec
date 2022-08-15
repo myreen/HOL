@@ -31,6 +31,9 @@ pattern {
    BO ` 5
    BI ` 5
    BD ` 14
+   SH ` 5
+   MB ` 5
+   ME ` 5
    imm24 ` 24
    imm2 ` 2
    imm3 ` 3
@@ -206,6 +209,18 @@ instruction DecodeInst (w::word) =
      case '011111 RT 01000 00000 0101010011 0' =>
         {  rt = [RT];
            Mflr (rt)
+        }
+
+     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     -- rlwinm RA,RS,SH,MB,ME (p107)
+     -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     case '010101 RA RS SH MB ME 0' =>
+        {  ra = [RA];
+           rs = [RS];
+           sh = [SH];
+           mb = [MB];
+           me = [ME];
+           Rlwinm (ra,rs,sh,mb,me)
         }
 
      -- ~~~~~~~~~~~~~~~

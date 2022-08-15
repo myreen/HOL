@@ -717,6 +717,7 @@ val res = map add_simple_dfn
   ,dfn'Cmpwi_def
   ,dfn'Mflr_def
   ,dfn'Mtlr_def
+  ,dfn'Rlwinm_def
   ,dfn'Lwz_def
   ,dfn'Lwzu_def
   ,dfn'Lwzx_def
@@ -783,7 +784,12 @@ local
    fun eval_sw2sw th = let
      val tms = find_terms wordsSyntax.is_sw2sw (concl th)
      in REWRITE_RULE (map EVAL tms) th end
-   val MP_Next = eval_sw2sw o
+   val mask_pat = “ppc$mask _”
+   fun eval_mask th = let
+     val tms = find_terms (can (match_term mask_pat)) (concl th)
+     in REWRITE_RULE (map EVAL tms) th end
+   val MP_Next = eval_mask o
+                 eval_sw2sw o
                  SIMP_RULE std_ss [wordsTheory.WORD_OR_CLAUSES, wordsTheory.w2w_0,
                                    ppc_step_simps,v2w_field_rwts1,v2w_field_rwts2] o
                  CONV_RULE EXPAND_CONV o
@@ -873,6 +879,9 @@ val h = "4081ffcc"; (* ble 64 <f+0x2c> *)
 val h = "815f000c"; (* lwz r10,12(r31) *)
 val h = "913f001c"; (* stw r9,28(r31) *)
 val h = "9421ffe0"; (* stwu r1,-32(r1) *)
+val h = "552a1838"; (* rlwinm r10,r9,3,0,28 *)
+val h = "5529103a"; (* rlwinm r9,r9,2,0,29 *)
+val h = "5529073e"; (* clrlwi  r9,r9,28 same as rlwinm r9, r9, 0, 28, 31 *)
 
 val v = mk_bool_list (hex_to_bits h)
 

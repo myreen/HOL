@@ -180,8 +180,8 @@ QED
 Theorem ble_test2:
   aligned 2 s.PC ⇒
   s.exception = NoException ⇒
-  s.MEM (s.PC + 2w) = v2w [T; T; T; T; T; T; T; T] ⇒
   s.MEM (s.PC + 3w) = v2w [T; T; F; F; T; T; F; F] ⇒
+  s.MEM (s.PC + 2w) = v2w [T; T; T; T; T; T; T; T] ⇒
   s.MEM (s.PC + 1w) = v2w [T; F; F; F; F; F; F; T] ⇒
   s.MEM s.PC = v2w [F; T; F; F; F; F; F; F] ⇒
   s.CR1 ⇒
@@ -197,8 +197,8 @@ val [th] = ppc_step_hex "815f000c"; (* lwz r10,12(r31) *)
 Theorem lwz_test:
   aligned 2 s.PC ⇒
   s.exception = NoException ⇒
-  s.MEM (s.PC + 2w) = v2w [F; F; F; F; F; F; F; F] ⇒
   s.MEM (s.PC + 3w) = v2w [F; F; F; F; T; T; F; F] ⇒
+  s.MEM (s.PC + 2w) = v2w [F; F; F; F; F; F; F; F] ⇒
   s.MEM (s.PC + 1w) = v2w [F; T; F; T; T; T; T; T] ⇒
   s.MEM s.PC = v2w [T; F; F; F; F; F; F; T] ⇒
   NextStatePPC s =
@@ -223,8 +223,8 @@ val [th] = ppc_step_hex "913f001c"; (* stw r9,28(r31) *)
 Theorem stw_test:
   aligned 2 s.PC ⇒
   s.exception = NoException ⇒
-  s.MEM (s.PC + 2w) = v2w [F; F; F; F; F; F; F; F] ⇒
   s.MEM (s.PC + 3w) = v2w [F; F; F; T; T; T; F; F] ⇒
+  s.MEM (s.PC + 2w) = v2w [F; F; F; F; F; F; F; F] ⇒
   s.MEM (s.PC + 1w) = v2w [F; F; T; T; T; T; T; T] ⇒
   s.MEM s.PC = v2w [T; F; F; T; F; F; F; T] ⇒
   NextStatePPC s =
@@ -248,8 +248,8 @@ val [th] = ppc_step_hex "9421ffe0"; (* stwu r1,-32(r1) *)
 Theorem stwu_test:
   aligned 2 s.PC ⇒
   s.exception = NoException ⇒
-  s.MEM (s.PC + 2w) = v2w [T; T; T; T; T; T; T; T] ⇒
   s.MEM (s.PC + 3w) = v2w [T; T; T; F; F; F; F; F] ⇒
+  s.MEM (s.PC + 2w) = v2w [T; T; T; T; T; T; T; T] ⇒
   s.MEM (s.PC + 1w) = v2w [F; F; T; F; F; F; F; T] ⇒
   s.MEM s.PC = v2w [T; F; F; T; F; T; F; F] ⇒
   NextStatePPC s =
@@ -273,8 +273,8 @@ val [th] = ppc_step_hex "7c0802a6"; (* mflr r0 *)
 Theorem mflr_test:
   aligned 2 s.PC ⇒
   s.exception = NoException ⇒
-  s.MEM (s.PC + 2w) = v2w [F; F; F; F; F; F; T; F] ⇒
   s.MEM (s.PC + 3w) = v2w [T; F; T; F; F; T; T; F] ⇒
+  s.MEM (s.PC + 2w) = v2w [F; F; F; F; F; F; T; F] ⇒
   s.MEM (s.PC + 1w) = v2w [F; F; F; F; T; F; F; F] ⇒
   s.MEM s.PC = v2w [F; T; T; T; T; T; F; F] ⇒
   NextStatePPC s =
@@ -290,13 +290,39 @@ val [th] = ppc_step_hex "7c0803a6"; (* mtlr r0 *)
 Theorem mtlr_test:
   aligned 2 s.PC ⇒
   s.exception = NoException ⇒
-  s.MEM (s.PC + 2w) = v2w [F; F; F; F; F; F; T; T] ⇒
   s.MEM (s.PC + 3w) = v2w [T; F; T; F; F; T; T; F] ⇒
+  s.MEM (s.PC + 2w) = v2w [F; F; F; F; F; F; T; T] ⇒
   s.MEM (s.PC + 1w) = v2w [F; F; F; F; T; F; F; F] ⇒
   s.MEM s.PC = v2w [F; T; T; T; T; T; F; F] ⇒
   NextStatePPC s = SOME (s with <|LR := s.REG 0w; PC := s.PC + 4w|>)
 Proof
   rpt strip_tac \\ drule_all (DISCH_ALL th) \\ simp []
+QED
+
+(* rlwinm instruction *)
+
+val [th] = ppc_step_hex "5529073e"; (* clrlwi  r9,r9,28 same as rlwinm r9, r9, 0, 28, 31 *)
+
+Theorem rlwinm_test:
+  aligned 2 s.PC ⇒
+  s.exception = NoException ⇒
+  s.MEM (s.PC + 3w) = v2w [F; F; T; T; T; T; T; F] ⇒
+  s.MEM (s.PC + 2w) = v2w [F; F; F; F; F; T; T; T] ⇒
+  s.MEM (s.PC + 1w) = v2w [F; F; T; F; T; F; F; T] ⇒
+  s.MEM s.PC = v2w [F; T; F; T; F; T; F; T] ⇒
+  NextStatePPC s =
+  SOME (s with <|PC := s.PC + 4w; REG := s.REG⦇9w ↦ s.REG 9w && 15w⦈|>)
+Proof
+  rpt strip_tac \\ drule_all (DISCH_ALL th) \\ simp []
+QED
+
+Theorem mask_test:
+  (* based on https://devblogs.microsoft.com/oldnewthing/20180810-00/?p=99465 *)
+  mask(2w,1w) = 0xFFFFFFFFw ∧
+  mask (6w,20w) = 0x3FFF800w ∧
+  mask (20w,6w) = 0xFE000FFFw
+Proof
+  EVAL_TAC
 QED
 
 val _ = export_theory ();

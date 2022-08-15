@@ -120,6 +120,14 @@ define Mflr (t :: ireg) =
    IncPC ()
 }
 
+define Rlwinm (a :: ireg, s :: ireg, sh :: bits(5), mb :: bits(5), me :: bits(5)) =
+{
+   r = R (s) #<< [sh];
+   m = mask(mb,me);
+   R (a) <- r && m;
+   IncPC ()
+}
+
 -------------------------------------------------------
 -- Stubs for Hints and other Miscellaneous instructions
 -------------------------------------------------------

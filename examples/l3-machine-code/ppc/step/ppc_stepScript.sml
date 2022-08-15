@@ -872,7 +872,9 @@ Theorem ppc_step_simps:
   ((s with <|PC := w; LR := s.LR|>) = (s with <|PC := w|>)) ∧
   ((n2w n = (n2w m):word5) <=> (n MOD 32 = m MOD 32)) ∧
   (1w ≠ 0w:word1) ∧
-  (0w ≠ 1w:word1)
+  (0w ≠ 1w:word1) ∧
+  (w2n (n2w n:5 word) = n MOD 32) ∧
+  (w ⇆ 0 = w)
 Proof
   rw []
   \\ fs [ppc_state_component_equality]
@@ -1127,5 +1129,7 @@ Theorem nop_simp:
 Proof
   fs [ppcTheory.ppc_state_component_equality]
 QED
+
+Theorem mask_def[compute] = ppcTheory.mask_def;
 
 val () = export_theory ()
