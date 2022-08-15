@@ -715,6 +715,8 @@ val res = map add_simple_dfn
   ,dfn'Bc_def
   ,dfn'Blr_def
   ,dfn'Cmpwi_def
+  ,dfn'Mflr_def
+  ,dfn'Mtlr_def
   ,dfn'Lwz_def
   ,dfn'Lwzu_def
   ,dfn'Lwzx_def

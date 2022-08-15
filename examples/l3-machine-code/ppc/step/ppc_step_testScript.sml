@@ -266,4 +266,37 @@ Proof
   rpt strip_tac \\ drule_all (DISCH_ALL th) \\ simp []
 QED
 
+(* mflr instruction *)
+
+val [th] = ppc_step_hex "7c0802a6"; (* mflr r0 *)
+
+Theorem mflr_test:
+  aligned 2 s.PC ⇒
+  s.exception = NoException ⇒
+  s.MEM (s.PC + 2w) = v2w [F; F; F; F; F; F; T; F] ⇒
+  s.MEM (s.PC + 3w) = v2w [T; F; T; F; F; T; T; F] ⇒
+  s.MEM (s.PC + 1w) = v2w [F; F; F; F; T; F; F; F] ⇒
+  s.MEM s.PC = v2w [F; T; T; T; T; T; F; F] ⇒
+  NextStatePPC s =
+  SOME (s with <|PC := s.PC + 4w; REG := s.REG⦇0w ↦ s.LR⦈|>)
+Proof
+  rpt strip_tac \\ drule_all (DISCH_ALL th) \\ simp []
+QED
+
+(* mtlr instruction *)
+
+val [th] = ppc_step_hex "7c0803a6"; (* mtlr r0 *)
+
+Theorem mtlr_test:
+  aligned 2 s.PC ⇒
+  s.exception = NoException ⇒
+  s.MEM (s.PC + 2w) = v2w [F; F; F; F; F; F; T; T] ⇒
+  s.MEM (s.PC + 3w) = v2w [T; F; T; F; F; T; T; F] ⇒
+  s.MEM (s.PC + 1w) = v2w [F; F; F; F; T; F; F; F] ⇒
+  s.MEM s.PC = v2w [F; T; T; T; T; T; F; F] ⇒
+  NextStatePPC s = SOME (s with <|LR := s.REG 0w; PC := s.PC + 4w|>)
+Proof
+  rpt strip_tac \\ drule_all (DISCH_ALL th) \\ simp []
+QED
+
 val _ = export_theory ();

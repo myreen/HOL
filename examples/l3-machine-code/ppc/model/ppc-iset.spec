@@ -108,6 +108,18 @@ define Lwzx (rt :: ireg, ra :: ireg, rb :: ireg) =
    R (rt) <- [mem (EA, 4)]
 }
 
+define Mtlr (t :: ireg) =
+{
+   LR <- R (t);
+   IncPC ()
+}
+
+define Mflr (t :: ireg) =
+{
+   R (t) <- LR;
+   IncPC ()
+}
+
 -------------------------------------------------------
 -- Stubs for Hints and other Miscellaneous instructions
 -------------------------------------------------------
