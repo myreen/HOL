@@ -878,6 +878,41 @@ Proof
   \\ fs [ppc_state_component_equality]
 QED
 
+Theorem v2w_field_rwts1:
+  (v2w (field 31 24 (w2v (w:word32))) = ((w2w (w >>> 24))) : word8) /\
+  (v2w (field 23 16 (w2v (w:word32))) = ((w2w (w >>> 16))) : word8) /\
+  (v2w (field 15  8 (w2v (w:word32))) = ((w2w (w >>> 8))) : word8) /\
+  (v2w (field  7  0 (w2v (w:word32))) = (w2w w) : word8)
+Proof
+  fs [bitstringTheory.w2v_def,bitstringTheory.field_def,
+      bitstringTheory.fixwidth_def,
+      bitstringTheory.zero_extend_def,
+      bitstringTheory.shiftr_def]
+  \\ blastLib.BBLAST_TAC
+QED
+
+Theorem v2w_field_rwts2:
+  v2w (field 31 0 (mem1 a1 s ⧺ (mem1 a2 s ⧺ (mem1 a3 s ⧺ mem1 a4 s)))) =
+  w2w (s.MEM a1) << 24 ||
+  w2w (s.MEM a2) << 16 ||
+  w2w (s.MEM a3) << 8 ||
+  w2w (s.MEM a4) :word32
+Proof
+  fs [mem1_def]
+  \\ Q.SPEC_TAC (‘s.MEM a1’,‘b1’)
+  \\ Q.SPEC_TAC (‘s.MEM a2’,‘b2’)
+  \\ Q.SPEC_TAC (‘s.MEM a3’,‘b3’)
+  \\ Q.SPEC_TAC (‘s.MEM a4’,‘b4’)
+  \\ rw []
+  \\ fs [bitstringTheory.v2w_def,bitstringTheory.w2v_def]
+  \\ fs [bitstringTheory.field_def]
+  \\ fs [bitstringTheory.w2v_def,bitstringTheory.field_def,
+      bitstringTheory.fixwidth_def,
+      bitstringTheory.zero_extend_def,
+      bitstringTheory.shiftr_def]
+  \\ blastLib.BBLAST_TAC
+QED
+
 Theorem branch_cond_always_met:
   (FST (branch_cond_met (20w,0w) s) = T) ∧
   (SND (branch_cond_met (20w,0w) s) = s)

@@ -24,7 +24,7 @@ Proof
   rpt strip_tac \\ drule_all (DISCH_ALL th) \\ simp []
 QED
 
-(* addi with immediate *)
+(* add immediate *)
 
 val [th] = ppc_step_hex "397f0020"; (* addi r11,r31,32 *)
 
@@ -38,6 +38,43 @@ Theorem add_r11_r31_32_test:
   NextStatePPC s =
   SOME
   (s with <|PC := s.PC + 4w; REG := s.REG⦇11w ↦ s.REG 31w + 32w⦈|>)
+Proof
+  rpt strip_tac \\ drule_all (DISCH_ALL th) \\ simp []
+QED
+
+(* load immediate *)
+
+val [th] = ppc_step_hex "39200000"; (* li r9,0  same as addi r9,r0,0 *)
+
+Theorem li_test:
+  aligned 2 s.PC ⇒
+  s.exception = NoException ⇒
+  s.MEM (s.PC + 3w) = v2w [F; F; F; F; F; F; F; F] ⇒
+  s.MEM (s.PC + 2w) = v2w [F; F; F; F; F; F; F; F] ⇒
+  s.MEM (s.PC + 1w) = v2w [F; F; T; F; F; F; F; F] ⇒
+  s.MEM s.PC = v2w [F; F; T; T; T; F; F; T] ⇒
+  NextStatePPC s =
+  SOME (s with <|PC := s.PC + 4w; REG := s.REG⦇9w ↦ 0w⦈|>)
+Proof
+  rpt strip_tac \\ drule_all (DISCH_ALL th) \\ simp []
+QED
+
+(* cmpwi instruction *)
+
+val [th] = ppc_step_hex "2c090063"; (* cmpwi r9,99 *)
+
+Theorem cmpwi_test:
+  aligned 2 s.PC ⇒
+  s.exception = NoException ⇒
+  s.MEM (s.PC + 2w) = v2w [F; F; F; F; F; F; F; F] ⇒
+  s.MEM (s.PC + 3w) = v2w [F; T; T; F; F; F; T; T] ⇒
+  s.MEM (s.PC + 1w) = v2w [F; F; F; F; T; F; F; T] ⇒
+  s.MEM s.PC = v2w [F; F; T; F; T; T; F; F] ⇒
+  NextStatePPC s =
+  SOME
+  (s with
+   <|CR0 := (s.REG 9w < 99w); CR1 := (s.REG 9w = 99w);
+     CR2 := (s.REG 9w > 99w); PC := s.PC + 4w|>)
 Proof
   rpt strip_tac \\ drule_all (DISCH_ALL th) \\ simp []
 QED
@@ -151,6 +188,82 @@ Theorem ble_test2:
   NextStatePPC s = SOME (s with PC := s.PC + 4w)
 Proof
   rpt strip_tac \\ drule_all (DISCH_ALL th2) \\ simp []
+QED
+
+(* lwz instruction *)
+
+val [th] = ppc_step_hex "815f000c"; (* lwz r10,12(r31) *)
+
+Theorem lwz_test:
+  aligned 2 s.PC ⇒
+  s.exception = NoException ⇒
+  s.MEM (s.PC + 2w) = v2w [F; F; F; F; F; F; F; F] ⇒
+  s.MEM (s.PC + 3w) = v2w [F; F; F; F; T; T; F; F] ⇒
+  s.MEM (s.PC + 1w) = v2w [F; T; F; T; T; T; T; T] ⇒
+  s.MEM s.PC = v2w [T; F; F; F; F; F; F; T] ⇒
+  NextStatePPC s =
+  SOME
+  (s with
+   REG :=
+   s.REG⦇
+    10w ↦
+    w2w (s.MEM (s.REG 31w + 12w + 0w)) ≪ 24 ‖
+    w2w (s.MEM (s.REG 31w + 12w + 1w)) ≪ 16 ‖
+    w2w (s.MEM (s.REG 31w + 12w + 2w)) ≪ 8 ‖
+    w2w (s.MEM (s.REG 31w + 12w + 3w))
+    ⦈)
+Proof
+  rpt strip_tac \\ drule_all (DISCH_ALL th) \\ simp []
+QED
+
+(* stw instruction *)
+
+val [th] = ppc_step_hex "913f001c"; (* stw r9,28(r31) *)
+
+Theorem stw_test:
+  aligned 2 s.PC ⇒
+  s.exception = NoException ⇒
+  s.MEM (s.PC + 2w) = v2w [F; F; F; F; F; F; F; F] ⇒
+  s.MEM (s.PC + 3w) = v2w [F; F; F; T; T; T; F; F] ⇒
+  s.MEM (s.PC + 1w) = v2w [F; F; T; T; T; T; T; T] ⇒
+  s.MEM s.PC = v2w [T; F; F; T; F; F; F; T] ⇒
+  NextStatePPC s =
+  SOME
+  (s with
+   MEM :=
+   s.MEM⦇
+    28w + s.REG 31w ↦ w2w (s.REG 9w ⋙ 24);
+    28w + s.REG 31w + 1w ↦ w2w (s.REG 9w ⋙ 16);
+    28w + s.REG 31w + 2w ↦ w2w (s.REG 9w ⋙ 8);
+    28w + s.REG 31w + 3w ↦ w2w (s.REG 9w)
+    ⦈)
+Proof
+  rpt strip_tac \\ irule (DISCH_ALL th) \\ simp []
+QED
+
+(* stwu instruction *)
+
+val [th] = ppc_step_hex "9421ffe0"; (* stwu r1,-32(r1) *)
+
+Theorem stwu_test:
+  aligned 2 s.PC ⇒
+  s.exception = NoException ⇒
+  s.MEM (s.PC + 2w) = v2w [T; T; T; T; T; T; T; T] ⇒
+  s.MEM (s.PC + 3w) = v2w [T; T; T; F; F; F; F; F] ⇒
+  s.MEM (s.PC + 1w) = v2w [F; F; T; F; F; F; F; T] ⇒
+  s.MEM s.PC = v2w [T; F; F; T; F; T; F; F] ⇒
+  NextStatePPC s =
+  SOME
+  (s with
+   <|MEM :=
+     s.MEM⦇
+      0xFFFFFFE0w + s.REG 1w ↦ w2w (s.REG 1w ⋙ 24);
+      0xFFFFFFE0w + s.REG 1w + 1w ↦ w2w (s.REG 1w ⋙ 16);
+      0xFFFFFFE0w + s.REG 1w + 2w ↦ w2w (s.REG 1w ⋙ 8);
+      0xFFFFFFE0w + s.REG 1w + 3w ↦ w2w (s.REG 1w)
+      ⦈; REG := s.REG⦇1w ↦ 0xFFFFFFE0w + s.REG 1w⦈|>)
+Proof
+  rpt strip_tac \\ drule_all (DISCH_ALL th) \\ simp []
 QED
 
 val _ = export_theory ();

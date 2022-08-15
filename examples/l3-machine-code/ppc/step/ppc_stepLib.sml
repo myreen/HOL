@@ -713,7 +713,13 @@ val res = map add_simple_dfn
   ,dfn'Ori_def
   ,dfn'B_def
   ,dfn'Bc_def
-  ,dfn'Blr_def]
+  ,dfn'Blr_def
+  ,dfn'Cmpwi_def
+  ,dfn'Lwz_def
+  ,dfn'Lwzu_def
+  ,dfn'Lwzx_def
+  ,dfn'Stw_def |> SIMP_RULE (srw_ss()) [write'mem_def,LET_THM]
+  ,dfn'Stwu_def |> SIMP_RULE (srw_ss()) [write'mem_def,LET_THM]]
 
 (* Evaluator *)
 
@@ -739,15 +745,17 @@ in
        (case List.mapPartial (ev tm) (utilsLib.find_rw net tm) of
             [] => raise ERR "eval" "no valid step theorem"
           | [x] => x
+          | (x::_) => x (*
           | l => (Parse.print_term tm
                 ; print "\n"
-                ; raise ERR "eval" "more than one valid step theorem"))
+                ; raise ERR "eval" "more than one valid step theorem") *) )
        handle HOL_ERR {message = "not found",
                        origin_function = "find_rw", ...} =>
               raise (Parse.print_term tm
                    ; print "\n"
                    ; ERR "eval" "instruction instance not supported")
 end
+
 
 (*
  val tm = thm3 |> Drule.SPEC_ALL |> rhsc
@@ -775,7 +783,7 @@ local
      in REWRITE_RULE (map EVAL tms) th end
    val MP_Next = eval_sw2sw o
                  SIMP_RULE std_ss [wordsTheory.WORD_OR_CLAUSES, wordsTheory.w2w_0,
-                                   ppc_step_simps] o
+                                   ppc_step_simps,v2w_field_rwts1,v2w_field_rwts2] o
                  CONV_RULE EXPAND_CONV o
                  Drule.MATCH_MP (ppc_stepTheory.NextStatePPC |> UNDISCH)
    val Run_CONV = utilsLib.Run_CONV ("ppc", st) o get_val
@@ -814,7 +822,7 @@ in
                           ; raise ERR "eval_ppc" "failed to fully evaluate")
                val thm5 = (EXPAND_CONV THENC STATE_CONV) (mk_proj_exception r)
                val thm = Drule.LIST_CONJ [thm1, thm2, thm3, thm4, thm5]
-                         |> SIMP_RULE std_ss [branch_cond_always_met]
+                         |> SIMP_RULE std_ss [branch_cond_always_met,mem_def]
                val thms = let
                  val tm = find_term (can (match_term pat)) (concl thm)
                  val thm1 = DISCH tm thm |> SIMP_RULE std_ss []
@@ -860,6 +868,9 @@ val h = "48000030"; (* b 90 <f+0x58> *)
 val h = "48000001"; (* bl 78 <f+0x40> *)
 val h = "4e800020"; (* blr *)
 val h = "4081ffcc"; (* ble 64 <f+0x2c> *)
+val h = "815f000c"; (* lwz r10,12(r31) *)
+val h = "913f001c"; (* stw r9,28(r31) *)
+val h = "9421ffe0"; (* stwu r1,-32(r1) *)
 
 val v = mk_bool_list (hex_to_bits h)
 
