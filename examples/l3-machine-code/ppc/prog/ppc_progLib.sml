@@ -43,6 +43,7 @@ val ppc_select_state_pool_thm =
 val state_id =
    utilsLib.mk_state_id_thm ppcTheory.ppc_state_component_equality
       [
+       ["MEM"],
        ["MEM", "PC", "SP_EL0", "branch_hint"],
        ["MEM", "PC", "REG", "branch_hint"],
        ["MEM", "PC", "branch_hint"],
@@ -675,11 +676,13 @@ in
      val ts = List.map ppc_mk_pre_post thms
      val thms_ts = ListPair.zip (thms, ts)
      val thms_ts = List.concat (List.map combinations thms_ts)
+     val thm_ts = thms_ts
      (* --- *)
      val x = hd thms_ts
      val th = basic_spec x
      val th = th |> CONV_RULE (PATH_CONV "lrlrr" bitstringLib.v2w_n2w_CONV)
      val th = ppc_intro th
+     val th = byte_memory_introduction th
    in
      th
    end
@@ -689,22 +692,16 @@ end
 (* Testing...
 
 TODO:
- - support cond branch
- - support load word
- - support load byte
  - support store word
- - support store byte
- - clean up memory
  - rename registers,cr,lr
+ - support cond branch
 
-val s = "397f0020"; (* addi r11,r31,32 *)
+val s = "9421ffe0"; (* stwu r1,-32(r1) *)
 
 (* todo *)
 
-val res = ppc_spec_hex "815f000c"; (* lwz r10,12(r31) *)
-val res = ppc_spec_hex "4081ffcc"; (* ble 64 <f+0x2c> *)
-val res = ppc_spec_hex "913f001c"; (* stw r9,28(r31) *)
 val res = ppc_spec_hex "9421ffe0"; (* stwu r1,-32(r1) *)
+val res = ppc_spec_hex "4081ffcc"; (* ble 64 <f+0x2c> *)
 
 (* works *)
 
@@ -719,6 +716,8 @@ val res = ppc_spec_hex "5529073e"; (* clrlwi  r9,r9,28 same as rlwinm r9, r9, 0,
 val res = ppc_spec_hex "2c090063"; (* cmpwi r9,99 *)
 val res = ppc_spec_hex "48000001"; (* bl 78 <f+0x40> *)
 val res = ppc_spec_hex "7c0803a6"; (* mtlr r0 *)
+val res = ppc_spec_hex "815f000c"; (* lwz r10,12(r31) *)
+val res = ppc_spec_hex "913f001c"; (* stw r9,28(r31) *)  (* missing PC update *)
 
 *)
 

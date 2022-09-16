@@ -65,7 +65,8 @@ define Stw (rs :: ireg, ra :: ireg, d :: bits(32)) =
    -- DISCREPANCY: The spec defines this operation for 64-bit registers,
    -- not the 32-bit registers found in this model, so we omit the only
    -- store the lower 32 bits.
-   mem (EA, 4) <- [R (rs)]
+   mem (EA, 4) <- [R (rs)];
+   IncPC ()
 }
 
 define Stwu (rs :: ireg, ra :: ireg, d :: bits(32)) =
@@ -75,7 +76,8 @@ define Stwu (rs :: ireg, ra :: ireg, d :: bits(32)) =
    -- not the 32-bit registers found in this model, so we omit the only
    -- store the lower 32 bits.
    mem (EA, 4) <- [R (rs)];
-   R (ra) <- EA
+   R (ra) <- EA;
+   IncPC ()
 }
 
 define Lwz (rt :: ireg, ra :: ireg, d :: bits(32)) =
@@ -85,7 +87,8 @@ define Lwz (rt :: ireg, ra :: ireg, d :: bits(32)) =
    -- DISCREPANCY: The spec defines this operation for 64-bit registers,
    -- not the 32-bit registers found in this model, so we omit the "zero
    -- the upper half of the register" step.
-   R (rt) <- [mem (EA, 4)]
+   R (rt) <- [mem (EA, 4)];
+   IncPC ()
 }
 
 define Lwzu (rt :: ireg, ra :: ireg, d :: bits(32)) =
@@ -95,7 +98,8 @@ define Lwzu (rt :: ireg, ra :: ireg, d :: bits(32)) =
    -- not the 32-bit registers found in this model, so we omit the "zero
    -- the upper half of the register" step.
    R (rt) <- [mem (EA, 4)];
-   R (ra) <- EA
+   R (ra) <- EA;
+   IncPC ()
 }
 
 define Lwzx (rt :: ireg, ra :: ireg, rb :: ireg) =
@@ -105,7 +109,8 @@ define Lwzx (rt :: ireg, ra :: ireg, rb :: ireg) =
    -- DISCREPANCY: The spec defines this operation for 64-bit registers,
    -- not the 32-bit registers found in this model, so we omit the "zero
    -- the upper half of the register" step.
-   R (rt) <- [mem (EA, 4)]
+   R (rt) <- [mem (EA, 4)];
+   IncPC ()
 }
 
 define Mtlr (t :: ireg) =
