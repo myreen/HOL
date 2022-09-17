@@ -203,7 +203,8 @@ Theorem lwz_test:
   s.MEM s.PC = v2w [T; F; F; F; F; F; F; T] ⇒
   NextStatePPC s =
   SOME
-  (s with
+  (s with <|
+   PC := s.PC + 4w;
    REG :=
    s.REG⦇
     10w ↦
@@ -211,7 +212,7 @@ Theorem lwz_test:
     w2w (s.MEM (s.REG 31w + 12w + 1w)) ≪ 16 ‖
     w2w (s.MEM (s.REG 31w + 12w + 2w)) ≪ 8 ‖
     w2w (s.MEM (s.REG 31w + 12w + 3w))
-    ⦈)
+    ⦈ |>)
 Proof
   rpt strip_tac \\ drule_all (DISCH_ALL th) \\ simp []
 QED
@@ -230,13 +231,13 @@ Theorem stw_test:
   NextStatePPC s =
   SOME
   (s with
-   MEM :=
-   s.MEM⦇
-    28w + s.REG 31w ↦ w2w (s.REG 9w ⋙ 24);
-    28w + s.REG 31w + 1w ↦ w2w (s.REG 9w ⋙ 16);
-    28w + s.REG 31w + 2w ↦ w2w (s.REG 9w ⋙ 8);
-    28w + s.REG 31w + 3w ↦ w2w (s.REG 9w)
-    ⦈)
+   <|MEM :=
+     s.MEM⦇
+      28w + s.REG 31w ↦ w2w (s.REG 9w ⋙ 24);
+      28w + s.REG 31w + 1w ↦ w2w (s.REG 9w ⋙ 16);
+      28w + s.REG 31w + 2w ↦ w2w (s.REG 9w ⋙ 8);
+      28w + s.REG 31w + 3w ↦ w2w (s.REG 9w)
+      ⦈; PC := s.PC + 4w|>)
 Proof
   rpt strip_tac \\ irule (DISCH_ALL th) \\ simp []
 QED
@@ -261,7 +262,7 @@ Theorem stwu_test:
       0xFFFFFFE0w + s.REG 1w + 1w ↦ w2w (s.REG 1w ⋙ 16);
       0xFFFFFFE0w + s.REG 1w + 2w ↦ w2w (s.REG 1w ⋙ 8);
       0xFFFFFFE0w + s.REG 1w + 3w ↦ w2w (s.REG 1w)
-      ⦈; REG := s.REG⦇1w ↦ 0xFFFFFFE0w + s.REG 1w⦈|>)
+      ⦈; PC := s.PC + 4w; REG := s.REG⦇1w ↦ 0xFFFFFFE0w + s.REG 1w⦈|>)
 Proof
   rpt strip_tac \\ drule_all (DISCH_ALL th) \\ simp []
 QED

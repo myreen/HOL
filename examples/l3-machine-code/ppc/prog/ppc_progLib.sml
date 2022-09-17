@@ -2,7 +2,7 @@ structure ppc_progLib :> ppc_progLib =
 struct
 
 open HolKernel boolLib bossLib
-open (* stateLib *) spec_databaseLib ppc_progTheory
+open stateLib spec_databaseLib ppc_progTheory
 
 structure Parse =
 struct
@@ -27,6 +27,10 @@ val word = wordsSyntax.mk_int_word_type 32
 val pc_tm = Term.mk_var ("pc", word)
 val (_, _, dest_ppc_instr, _) = ppc_1 "ppc_instr"
 val (_, mk_ppc_PC, dest_ppc_PC, is_ppc_PC) = ppc_1 "ppc_PC"
+val (_, mk_ppc_CR0, dest_ppc_CR0, is_ppc_CR0) = ppc_1 "ppc_CR0"
+val (_, mk_ppc_CR1, dest_ppc_CR1, is_ppc_CR1) = ppc_1 "ppc_CR1"
+val (_, mk_ppc_CR2, dest_ppc_CR2, is_ppc_CR2) = ppc_1 "ppc_CR2"
+val (_, mk_ppc_LR, dest_ppc_LR, is_ppc_LR) = ppc_1 "ppc_LR"
 val (_, _, dest_ppc_MEM, is_ppc_MEM) = ppc_2 "ppc_MEM"
 val (_, mk_ppc_REG, dest_ppc_REG, is_ppc_REG) = ppc_2 "ppc_REG"
 
@@ -43,11 +47,10 @@ val ppc_select_state_pool_thm =
 val state_id =
    utilsLib.mk_state_id_thm ppcTheory.ppc_state_component_equality
       [
-       ["MEM"],
-       ["MEM", "PC", "SP_EL0", "branch_hint"],
+       ["MEM", "PC"],
        ["MEM", "PC", "REG", "branch_hint"],
        ["MEM", "PC", "branch_hint"],
-       ["REG", "SP_EL0", "branch_hint"],
+       ["REG", "CR0", "branch_hint"],
        ["REG", "branch_hint"]
       ]
 
@@ -618,58 +621,23 @@ local
    val string_to_opcode =
       bitstringSyntax.bitstring_of_hexstring o StringCvt.padLeft #"0" 8
    val nl = ref (fn () => ())
+   fun rename_regs th =
+     let
+       val (_,p,_,_) = helperLib.dest_spec (concl th)
+       val xs = helperLib.list_dest helperLib.dest_star p
+       fun var v = if is_var v then v else fail()
+       fun new_r tm =
+         let
+           val (r,v) = dest_ppc_REG tm
+           val n = r |> rand |> numSyntax.int_of_term |> int_to_string
+         in [var v |-> mk_var("r" ^ n, type_of v)] end
+         handle HOL_ERR _ =>
+         [(var (dest_ppc_CR0 tm) |-> mk_var("cr0", bool))] handle HOL_ERR _ =>
+         [(var (dest_ppc_CR1 tm) |-> mk_var("cr1", bool))] handle HOL_ERR _ =>
+         [(var (dest_ppc_CR2 tm) |-> mk_var("cr2", bool))] handle HOL_ERR _ =>
+         [(var (dest_ppc_LR tm)  |-> mk_var("lr",  word))] handle HOL_ERR _ => []
+     in INST (flatten (map new_r xs)) th end
 in
-   val list_db = list_db
-   fun ppc_config options =
-      let
-         val opt = process_rule_options options
-      in
-         if #temporal (get_current_opt ()) = #temporal opt
-            then ()
-         else (reset_specs (); stateLib.set_temporal (#temporal opt))
-       ; nl := (fn () => if #newline opt then print "\n" else ())
-       ; set_current_opt opt
-      end
-   fun ppc_spec s =
-      List.map (fn t => (print "+"; basic_spec t)) (pend_spec s) before !nl ()
-   fun addInstructionClass s =
-      ( print (" " ^ s)
-      ; if Redblackset.member (!spec_label_set, s)
-           then ()
-        else ( pend_spec s
-             ; spec_label_set := Redblackset.add (!spec_label_set, s)
-             )
-      )
-   fun ppc_spec_hex looped s =
-      let
-         val opc = string_to_opcode s
-      in
-         case find_spec opc of
-         (*
-         val SOME (new, thms) = find_spec opc
-         *)
-            SOME (new, thms) =>
-              let
-                 val l = List.mapPartial (Lib.total (spec_spec opc)) thms
-              in
-                 if List.null l
-                    then loop looped opc "failed to find suitable spec" s
-                 else (if new then !nl () else (); mk_thm_set l)
-              end
-          | NONE => loop looped opc "failed to add suitable spec" s
-      end
-   and loop looped opc e s = raise ERR "ppc_spec_hex" (e ^ ": " ^ s) (*
-      if looped
-         then raise ERR "ppc_spec_hex" (e ^ ": " ^ s)
-      else ( case ppc_stepLib.ppc_instruction opc of
-             (*
-             val SOME s = ppc_stepLib.ppc_instruction opc
-             val () = addInstructionClass s
-             *)
-                SOME s => addInstructionClass s
-              | NONE => raise ERR "ppc_spec_hex" "not supported"
-           ; ppc_spec_hex true s) *)
-(* val ppc_spec_code = List.map ppc_spec_hex o ppcAssemblerLib.ppc_code *)
 
    fun ppc_spec_hex s = let
      val thms = ppc_stepLib.ppc_step_hex s
@@ -683,6 +651,7 @@ in
      val th = th |> CONV_RULE (PATH_CONV "lrlrr" bitstringLib.v2w_n2w_CONV)
      val th = ppc_intro th
      val th = byte_memory_introduction th
+     val th = rename_regs th
    in
      th
    end
@@ -692,15 +661,12 @@ end
 (* Testing...
 
 TODO:
- - support store word
- - rename registers,cr,lr
  - support cond branch
 
-val s = "9421ffe0"; (* stwu r1,-32(r1) *)
+val s = "4081ffcc"; (* ble 64 <f+0x2c> *)
 
 (* todo *)
 
-val res = ppc_spec_hex "9421ffe0"; (* stwu r1,-32(r1) *)
 val res = ppc_spec_hex "4081ffcc"; (* ble 64 <f+0x2c> *)
 
 (* works *)
@@ -712,12 +678,13 @@ val res = ppc_spec_hex "7d234b78"; (* mr r3,r9 *)
 val res = ppc_spec_hex "48000030"; (* b 90 <f+0x58> *)
 val res = ppc_spec_hex "4e800020"; (* blr *)
 val res = ppc_spec_hex "7c0802a6"; (* mflr r0 *)
-val res = ppc_spec_hex "5529073e"; (* clrlwi  r9,r9,28 same as rlwinm r9, r9, 0, 28, 31 *)
+val res = ppc_spec_hex "5529073e"; (* clrlwi r9,r9,28 same as rlwinm r9, r9, 0, 28, 31 *)
 val res = ppc_spec_hex "2c090063"; (* cmpwi r9,99 *)
 val res = ppc_spec_hex "48000001"; (* bl 78 <f+0x40> *)
 val res = ppc_spec_hex "7c0803a6"; (* mtlr r0 *)
 val res = ppc_spec_hex "815f000c"; (* lwz r10,12(r31) *)
-val res = ppc_spec_hex "913f001c"; (* stw r9,28(r31) *)  (* missing PC update *)
+val res = ppc_spec_hex "913f001c"; (* stw r9,28(r31) *)
+val res = ppc_spec_hex "9421ffe0"; (* stwu r1,-32(r1) *)
 
 *)
 
