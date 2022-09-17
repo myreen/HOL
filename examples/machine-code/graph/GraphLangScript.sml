@@ -7,7 +7,7 @@ val _ = ParseExtras.temp_loose_equality()
 open wordsTheory wordsLib pairTheory listTheory relationTheory;
 open pred_setTheory arithmeticTheory combinTheory;
 open arm_decompTheory set_sepTheory progTheory addressTheory;
-open m0_decompTheory riscv_progTheory prog_ppcTheory;
+open m0_decompTheory riscv_progTheory ppc_progTheory;
 open arm_decompLib m0_decompLib;
 
 val op by = BasicProvers.byA
@@ -342,76 +342,54 @@ val riscv_STATE_thm = save_thm("riscv_STATE_thm",
 
 (* representation in PowerPC SPEC *)
 
-(*
-
-open prog_ppcLib
-
-  val th = ppc_spec "7C119000";  (* cmpw 17,18    *)
-  val th = ppc_spec "7C812839";  (* and. 1,4,5    *)
-  val th = ppc_spec "7C5A2278";  (* xor 26, 2, 4  *)
-  val th = ppc_spec "7C5A1378";  (* mr 26, 2      *)
-  val th = ppc_spec "7C5A212E";  (* stwx 2, 26, 4 *)
-  val th = ppc_spec "80450004";  (* lwz 2, 4(5)   *)
-  val th = ppc_spec "7C221A14";  (* add 1,2,3     *)
-  val th = ppc_spec "4BFFFFFC";  (* b L1          *)
-  val th = ppc_spec "4181FFF4";  (* bc 12,1,L1    *)
-  val th = ppc_spec "4082FFF0";  (* bc 4,2,L1     *)
-  val th = ppc_spec "4083FFEC";  (* bc 4,3,L1     *)
-  val th = ppc_spec "88830005";  (* lbz 4,5,3     *)
-  val th = ppc_spec "98830005";  (* stb 4,5,3     *)
-  val th = ppc_spec "7C858396";  (* divwu 4,5,16  *)
-*)
-
 val ppc_STATE_REGS_def = Define `
   ppc_STATE_REGS s =
-    pR 0w (var_word "r0" s) *
-    pR 1w (var_word "r1" s) *
-    pR 2w (var_word "r2" s) *
-    pR 3w (var_word "r3" s) *
-    pR 4w (var_word "r4" s) *
-    pR 5w (var_word "r5" s) *
-    pR 6w (var_word "r6" s) *
-    pR 7w (var_word "r7" s) *
-    pR 8w (var_word "r8" s) *
-    pR 9w (var_word "r9" s) *
-    pR 10w (var_word "r10" s) *
-    pR 11w (var_word "r11" s) *
-    pR 12w (var_word "r12" s) *
-    pR 13w (var_word "r13" s) *
-    pR 14w (var_word "r14" s) *
-    pR 15w (var_word "r15" s) *
-    pR 16w (var_word "r16" s) *
-    pR 17w (var_word "r17" s) *
-    pR 18w (var_word "r18" s) *
-    pR 19w (var_word "r19" s) *
-    pR 20w (var_word "r20" s) *
-    pR 21w (var_word "r21" s) *
-    pR 22w (var_word "r22" s) *
-    pR 23w (var_word "r23" s) *
-    pR 24w (var_word "r24" s) *
-    pR 25w (var_word "r25" s) *
-    pR 26w (var_word "r26" s) *
-    pR 27w (var_word "r27" s) *
-    pR 28w (var_word "r28" s) *
-    pR 29w (var_word "r29" s) *
-    pR 30w (var_word "r30" s) *
-    pR 31w (var_word "r31" s)`;
+    ppc_REG 0w (var_word "r0" s) *
+    ppc_REG 1w (var_word "r1" s) *
+    ppc_REG 2w (var_word "r2" s) *
+    ppc_REG 3w (var_word "r3" s) *
+    ppc_REG 4w (var_word "r4" s) *
+    ppc_REG 5w (var_word "r5" s) *
+    ppc_REG 6w (var_word "r6" s) *
+    ppc_REG 7w (var_word "r7" s) *
+    ppc_REG 8w (var_word "r8" s) *
+    ppc_REG 9w (var_word "r9" s) *
+    ppc_REG 10w (var_word "r10" s) *
+    ppc_REG 11w (var_word "r11" s) *
+    ppc_REG 12w (var_word "r12" s) *
+    ppc_REG 13w (var_word "r13" s) *
+    ppc_REG 14w (var_word "r14" s) *
+    ppc_REG 15w (var_word "r15" s) *
+    ppc_REG 16w (var_word "r16" s) *
+    ppc_REG 17w (var_word "r17" s) *
+    ppc_REG 18w (var_word "r18" s) *
+    ppc_REG 19w (var_word "r19" s) *
+    ppc_REG 20w (var_word "r20" s) *
+    ppc_REG 21w (var_word "r21" s) *
+    ppc_REG 22w (var_word "r22" s) *
+    ppc_REG 23w (var_word "r23" s) *
+    ppc_REG 24w (var_word "r24" s) *
+    ppc_REG 25w (var_word "r25" s) *
+    ppc_REG 26w (var_word "r26" s) *
+    ppc_REG 27w (var_word "r27" s) *
+    ppc_REG 28w (var_word "r28" s) *
+    ppc_REG 29w (var_word "r29" s) *
+    ppc_REG 30w (var_word "r30" s) *
+    ppc_REG 31w (var_word "r31" s)`;
 
 val ppc_STACK_MEMORY_def = Define `
-  ppc_STACK_MEMORY = pBYTE_MEMORY`;
+  ppc_STACK_MEMORY = ppc_MEMORY`;
 
 val ppc_STATUS_def = Define `
   ppc_STATUS s =
-    pS1 (PPC_CR0 0w) (SOME (var_bool "n" s)) *
-    pS1 (PPC_CR0 1w) (SOME (var_bool "v" s)) *
-    pS1 (PPC_CR0 2w) (SOME (var_bool "z" s)) *
-    pS1 (PPC_CR0 3w) NONE *
-    pS1 PPC_CARRY (SOME (var_bool "c" s))`;
+    ppc_CR0 (var_bool "n" s) *
+    ppc_CR1 (var_bool "v" s) *
+    ppc_CR2 (var_bool "z" s)`;
 
 val ppc_STATE_def = Define `
   ppc_STATE s =
     ppc_STATE_REGS s * ppc_STATUS s * (* pLR (var_word "lr" s) * *)
-    pBYTE_MEMORY (var_dom "dom" s) (var_mem "mem" s) *
+    ppc_MEMORY (var_dom "dom" s) (var_mem "mem" s) *
     ppc_STACK_MEMORY (var_dom "dom_stack" s) (var_mem "stack" s)`;
 
 val ppc_STATE_thm = save_thm("ppc_STATE_thm",
@@ -489,7 +467,7 @@ val IMPL_INST_def = Define `
 val a_tools = ``(ARM_MODEL,arm_STATE,arm_PC)``
 val m_tools = ``(M0_MODEL,m0_STATE,m0_PC)``
 val r_tools = ``(RISCV_MODEL,riscv_STATE,riscv_PC)``
-val p_tools = ``(PPC_MODEL,ppc_STATE,pPC)``
+val p_tools = ``(PPC_MODEL,ppc_STATE,ppc_pc)``
 
 val ARM_def = Define `ARM (c:((word32 # word32) set)) = (c,^a_tools)`;
 val M0_def = Define `M0 (c:(word32 # (word16 + word32)) set) = (c,^m_tools)`;
