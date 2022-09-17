@@ -102,4 +102,28 @@ val ppc_TEMPORAL_PC_INTRO = Q.store_thm("ppc_TEMPORAL_PC_INTRO",
 
 (* ------------------------------------------------------------------------ *)
 
+Theorem SPEC_IMP_F:
+  SPEC m (x * f F) c (y * f F) ⇒ ∀b. SPEC m (x * f b * cond ~b) c (y * f b)
+Proof
+  fs [progTheory.SPEC_MOVE_COND]
+QED
+
+Theorem SPEC_IMP_T:
+  SPEC m (x * f T) c (y * f T) ⇒ ∀b. SPEC m (x * f b * cond b) c (y * f b)
+Proof
+  fs [progTheory.SPEC_MOVE_COND]
+QED
+
+Theorem SPEC_IMP_F_ALT:
+  SPEC m (x * f F) c y ⇒ ∀b. SPEC m (x * f b * cond ~b) c y
+Proof
+  fs [progTheory.SPEC_MOVE_COND]
+QED
+
+Theorem SPEC_IMP_T_ALT:
+  SPEC m (x * f T) c y ⇒ ∀b. SPEC m (x * f b * cond b) c y
+Proof
+  fs [progTheory.SPEC_MOVE_COND]
+QED
+
 val () = export_theory()
