@@ -35,8 +35,8 @@ define Blr (bo :: bits(5), bi :: bits(5)) =
 define Cmpwi (a :: ireg, si :: bits(32)) =
 {
    CR0 <- (R (a) < si);
-   CR1 <- (R (a) == si);
-   CR2 <- (R (a) > si);
+   CR1 <- (R (a) > si);
+   CR2 <- (R (a) == si);
    IncPC ()
 }
 
