@@ -302,7 +302,7 @@ val () = riscv_progLib.riscv_config true (* set id yo 0 *)
 val riscv_tools = riscv_decompLib.riscv_tools
 val (riscv_spec,_,_,_) = riscv_tools
 
-val ppc_tools = prog_ppcLib.ppc_tools
+val ppc_tools = ppc_progLib.ppc_tools
 val (ppc_spec,_,_,_) = ppc_tools
 
 fun get_tools () =

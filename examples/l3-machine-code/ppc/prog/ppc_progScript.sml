@@ -126,4 +126,17 @@ Proof
   fs [progTheory.SPEC_MOVE_COND]
 QED
 
+Theorem ppc_pc_cond_intro_neg:
+  ppc_pc (pc + n2w n) =
+  ppc_pc (if n < 2147483648 then pc + n2w n else pc - n2w (4294967296 - n MOD 4294967296))
+Proof
+  IF_CASES_TAC >- fs []
+  \\ irule EQ_TRANS
+  \\ qexists_tac ‘ppc_pc (pc + (- - n2w n))’
+  \\ conj_tac >- fs []
+  \\ rewrite_tac [GSYM wordsTheory.word_sub_def]
+  \\ rewrite_tac [wordsTheory.word_2comp_n2w]
+  \\ fs []
+QED
+
 val () = export_theory()

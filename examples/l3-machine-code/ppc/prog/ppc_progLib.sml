@@ -276,14 +276,18 @@ in
        val th = th |> CONV_RULE (PATH_CONV "lrlrr" bitstringLib.v2w_n2w_CONV)
        val th = ppc_intro th
        val th = byte_memory_introduction th
-       val th = rename_regs th
        val th = make_cr_into_var th
+       val th = ONCE_REWRITE_RULE [ppc_pc_cond_intro_neg] th
+       val th = SIMP_RULE std_ss [] th
+       val th = rename_regs th
        in th end
    in
      map prove_one thms_ts
    end
 
 end
+
+
 
 (* Testing...
 
@@ -302,6 +306,27 @@ val res = ppc_spec_hex "815f000c"; (* lwz r10,12(r31) *)
 val res = ppc_spec_hex "913f001c"; (* stw r9,28(r31) *)
 val res = ppc_spec_hex "9421ffe0"; (* stwu r1,-32(r1) *)
 val res = ppc_spec_hex "4081ffcc"; (* ble 64 <f+0x2c> *)
+
+*)
+
+local
+   fun format_thm th =
+      (th, 4,
+       stateLib.get_pc_delta
+          (Lib.equal "ppc_prog$ppc_pc" o fst o boolSyntax.dest_strip_comb) th)
+   val ppc_pc = Term.prim_mk_const {Thy = "ppc_prog", Name = "ppc_pc"}
+in
+   fun ppc_spec hex =
+      case List.map format_thm (ppc_spec_hex hex) of
+         [x] => (x, NONE)
+       | [x1, x2] => (x1, SOME x2)
+       | _ => raise ERR "ppc_spec" ""
+   val ppc_tools = (ppc_spec, fn _ => fail(), pS_HIDE, ppc_pc): helperLib.decompiler_tools
+end
+
+(*
+
+val res = ppc_spec "4081ffcc"; (* ble 64 <f+0x2c> *)
 
 *)
 

@@ -388,7 +388,7 @@ val ppc_STATUS_def = Define `
 
 val ppc_STATE_def = Define `
   ppc_STATE s =
-    ppc_STATE_REGS s * ppc_STATUS s * (* pLR (var_word "lr" s) * *)
+    ppc_STATE_REGS s * ppc_STATUS s * ppc_LR (var_word "lr" s) *
     ppc_MEMORY (var_dom "dom" s) (var_mem "mem" s) *
     ppc_STACK_MEMORY (var_dom "dom_stack" s) (var_mem "stack" s)`;
 
@@ -427,7 +427,7 @@ val all_names_def = Define `
     ["r0"; "r1"; "r2"; "r3"; "r4"; "r5"; "r6"; "r7"; "r8"; "r9";
      "r10"; "r11"; "r12"; "r13"; "r14"; "r15"; "r16"; "r17"; "r18"; "r19";
      "r20"; "r21"; "r22"; "r23"; "r24"; "r25"; "r26"; "r27"; "r28"; "r29";
-     "r30"; "r31"; "mode"; "n"; "z"; "c"; "v";
+     "r30"; "r31"; "lr"; "mode"; "n"; "z"; "c"; "v";
      "mem"; "dom"; "stack"; "dom_stack"; "clock"]`;
 
 val ret_and_all_names_def = Define `
@@ -2237,6 +2237,7 @@ val SKIP_TAG_IMP_CALL_ARM = store_thm("SKIP_TAG_IMP_CALL_ARM",
             ("r29",var_acc "r29");
             ("r30",var_acc "r30");
             ("r31",var_acc "r31");
+            ("lr",var_acc "lr");
             ("mode",var_acc "mode"); ("n",var_acc "n");
             ("z",var_acc "z"); ("c",var_acc "c"); ("v",var_acc "v");
             ("mem",var_acc "mem"); ("dom",var_acc "dom");
@@ -2303,6 +2304,7 @@ val SKIP_TAG_IMP_CALL_M0 = store_thm("SKIP_TAG_IMP_CALL_M0",
             ("r29",var_acc "r29");
             ("r30",var_acc "r30");
             ("r31",var_acc "r31");
+            ("lr",var_acc "lr");
             ("mode",var_acc "mode"); ("n",var_acc "n");
             ("z",var_acc "z"); ("c",var_acc "c"); ("v",var_acc "v");
             ("mem",var_acc "mem"); ("dom",var_acc "dom");
@@ -2369,6 +2371,7 @@ val SKIP_TAG_IMP_CALL_RISCV = store_thm("SKIP_TAG_IMP_CALL_RISCV",
             ("r29",var_acc "r29");
             ("r30",var_acc "r30");
             ("r31",var_acc "r31");
+            ("lr",var_acc "lr");
             ("mode",var_acc "mode"); ("n",var_acc "n");
             ("z",var_acc "z"); ("c",var_acc "c"); ("v",var_acc "v");
             ("mem",var_acc "mem"); ("dom",var_acc "dom");
@@ -2436,6 +2439,7 @@ val SKIP_TAG_IMP_CALL_PPC = store_thm("SKIP_TAG_IMP_CALL_PPC",
             ("r29",var_acc "r29");
             ("r30",var_acc "r30");
             ("r31",var_acc "r31");
+            ("lr",var_acc "lr");
             ("mode",var_acc "mode"); ("n",var_acc "n");
             ("z",var_acc "z"); ("c",var_acc "c"); ("v",var_acc "v");
             ("mem",var_acc "mem"); ("dom",var_acc "dom");

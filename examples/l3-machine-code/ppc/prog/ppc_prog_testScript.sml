@@ -100,7 +100,7 @@ Theorem cmpwi_test:
   SPEC PPC_MODEL
     (ppc_CR2 cr2 * ppc_CR1 cr1 * ppc_CR0 cr0 * ppc_REG 9w r9 * ppc_pc pc)
     {(pc,0x2C090063w)}
-    (ppc_CR2 (r9 > 99w) * ppc_CR1 (r9 = 99w) * ppc_CR0 (r9 < 99w) *
+    (ppc_CR2 (r9 = 99w) * ppc_CR1 (r9 > 99w) * ppc_CR0 (r9 < 99w) *
      ppc_REG 9w r9 * ppc_pc (pc + 4w))
 Proof
   assume_tac th \\ fs [AC STAR_COMM STAR_ASSOC]
@@ -190,13 +190,13 @@ val [th1,th2] = ppc_spec_hex "4081ffcc"; (* ble 64 <f+0x2c> *)
 
 Theorem ble_test:
   SPEC PPC_MODEL
-    (ppc_pc pc * ppc_CR1 b * cond (¬b))
+    (ppc_pc pc * ppc_CR1 cr1 * cond (¬cr1))
     {(pc,0x4081FFCCw)}
-    (ppc_pc (pc + 0xFFFFFFCCw) * ppc_CR1 b) ∧
+    (ppc_pc (pc + 0xFFFFFFCCw) * ppc_CR1 cr1) ∧
   SPEC PPC_MODEL
-    (ppc_pc pc * ppc_CR1 b * cond b)
+    (ppc_pc pc * ppc_CR1 cr1 * cond cr1)
     {(pc,0x4081FFCCw)}
-    (ppc_pc (pc + 4w) * ppc_CR1 b)
+    (ppc_pc (pc + 4w) * ppc_CR1 cr1)
 Proof
   assume_tac th1 \\ assume_tac th2 \\ fs [AC STAR_COMM STAR_ASSOC]
 QED

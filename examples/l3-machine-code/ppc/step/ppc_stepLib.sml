@@ -674,8 +674,7 @@ in
        in
            (rw tm
             handle Conv.UNCHANGED =>
-                   (WARN "ppc_decode" "fallback (slow) decode"
-                  ; FALL_CONV tm))
+                   ((* WARN "ppc_decode" "fallback (slow) decode" ; *) FALL_CONV tm))
            |> utilsLib.split_conditions
            |> avoid
            |> FINISH_RULE

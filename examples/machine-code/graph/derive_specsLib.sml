@@ -13,7 +13,7 @@ fun spec_rule x =
     ARM   => arm_spec x
   | M0    => m0_spec x
   | RISCV => riscv_spec x
-  | PPC   => prog_ppcLib.ppc_spec x;
+  | PPC   => (#1 ppc_progLib.ppc_tools) x;
 
 (* code abbrevs *)
 
