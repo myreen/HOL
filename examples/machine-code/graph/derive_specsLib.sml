@@ -770,7 +770,7 @@ fun derive_specs_for sec_name = let
   val sec_name = "createNewObjects"
   val sec_name = "get_num_avail_p_regs"
   val sec_name = "ensureEmptySlot"
-  val sec_name = "g"
+  val sec_name = "f"
 
   val _ = file_readerLib.show_code sec_name
 

@@ -271,7 +271,9 @@ fun prove_funcs_ok names = let
   val sec_name = "ndks_boot"
   val sec_name = "num_avail_p_regs"
   val sec_name = "resolveAddressBits"
+  val sec_name = "f"
   val sec_name = "g"
+  val r = func_decompile print_title sec_name
 
   val names = ["performInvocation_Reply","performInvocation_Endpoint"]
   val names = section_names()

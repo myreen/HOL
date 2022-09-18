@@ -176,6 +176,7 @@ val patterns =
       (``word_and (x:'a word) y``,"BWAnd"),
       (``word_or (x:'a word) y``,"BWOr"),
       (``word_xor (x:'a word) y``,"BWXOR"),
+      (``word_ror (x:'a word) y``,"RotateRight"),
       (``ShiftLeft (x:'a word) y``,"ShiftLeft"),
       (``ShiftRight (x:'a word) y``,"ShiftRight"),
       (``SignedShiftRight (x:'a word) y``,"SignedShiftRight"),

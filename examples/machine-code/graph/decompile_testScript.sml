@@ -50,4 +50,11 @@ val fast = false;
 val ignore_names = "";
 val res = decomp base_name fast ignore_names;
 
+(* PowerPC *)
+
+val base_name = "ppc-test/example";
+val fast = false;
+val ignore_names = "";
+val res = decomp base_name fast ignore_names;
+
 val _ = export_theory();

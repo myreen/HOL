@@ -116,7 +116,10 @@ local
               val str = tm |> rator |> rand |> stringSyntax.fromHOLstring
               val ty = type_of tm
             in mk_var(str,ty) |-> tm end)
-          |> (fn x => (``dmem:word32 set`` |->
+          |> (fn x => (``cr0:bool`` |-> ``(var_bool "n" ^s32)``)::
+                      (``cr1:bool`` |-> ``(var_bool "v" ^s32)``)::
+                      (``cr2:bool`` |-> ``(var_bool "z" ^s32)``)::
+                      (``dmem:word32 set`` |->
                        ``(var_dom "dom" ^s32):word32 set``)::
                       (``dom_stack:word32 set`` |->
                        ``(var_dom "dom_stack" ^s32):word32 set``)::x) |> INST
@@ -276,7 +279,9 @@ local
     val r1 = ``"r1"``
     val r10 = ``"r10"``
     val r14 = ``"r14"``
-    val ret_reg_name = (if !arch_name = RISCV then r1 else r14)
+    val lr = ``"lr"``
+    val ret_reg_name = (if !arch_name = RISCV then r1 else
+                        if !arch_name = PPC then lr else r14)
     val ret_addr_reg_name = (if !arch_name = RISCV then r10 else r0)
     val ret_str = ``"ret"``
     val ret_addr_input_str = ``"ret_addr_input"``
@@ -580,6 +585,7 @@ fun derive_insts_for sec_name = let
   val sec_name = "isIRQPending"
   val sec_name = "setMRs_syscall_error"
   val sec_name = "g"
+  val sec_name = "f"
 
   val thms = derive_insts_for sec_name
 
