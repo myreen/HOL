@@ -73,8 +73,8 @@ Theorem cmpwi_test:
   NextStatePPC s =
   SOME
   (s with
-   <|CR0 := (s.REG 9w < 99w); CR1 := (s.REG 9w = 99w);
-     CR2 := (s.REG 9w > 99w); PC := s.PC + 4w|>)
+   <|CR0 := (s.REG 9w < 99w); CR1 := (s.REG 9w > 99w);
+     CR2 := (s.REG 9w = 99w); PC := s.PC + 4w|>)
 Proof
   rpt strip_tac \\ drule_all (DISCH_ALL th) \\ simp []
 QED
