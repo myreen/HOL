@@ -103,9 +103,10 @@ fun format_line sec_name = let
     val i = Arbnum.toInt(Arbnum.fromHexString s1)
     val s2 = if String.isPrefix ".word" s3 then "const:" ^ s2 else s2
     val s2 = if String.isPrefix "ldrls\tpc," s3 then "switch:" ^ s2 else s2
+    val chars = [#"<",#">",#"+"]
     val s2 = ((if is_subroutine_call s3
                then "call:" ^ remove_dot
-                 (el 2 (String.tokens (fn x => mem x [#"<",#">"]) s3)) ^ ":" ^ s2
+                 (el 2 (String.tokens (fn x => mem x chars) s3)) ^ ":" ^ s2
                else s2)
               handle HOL_ERR _ => s2)
     val f = String.translate (fn c => if c = #" " then "" else
