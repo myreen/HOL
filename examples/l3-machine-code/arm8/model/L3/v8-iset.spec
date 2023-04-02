@@ -38,14 +38,6 @@ define Address (page::bool, imm::dword, d::reg) =
 
 -- ---------------------------------------------
 -- 32-bit
--- ADC{S} <Wd>, <Wn>, <Wm>
--- SBC{S} <Wd>, <Wn>, <Wm>
---
--- 64-bit
--- ADC{S} <Xd>, <Xn>, <Xm>
--- SBC{S} <Xd>, <Xn>, <Xm>
--- ---------------------------------------------
-
 define Data > AddSubCarry
        (sf::bits(N), sub_op::bool, setflags::bool, m::reg, n::reg, d::reg)
        with N in 32, 64 =
@@ -1389,6 +1381,7 @@ pattern
    imm12           ` 12
    imm16           ` 16
    imm19           ` 19
+   ftype           ` 2
 }
 
 instruction Decode (w::word) =
@@ -1944,6 +1937,12 @@ instruction Decode (w::word) =
       ------------------------
       case '1101010100 L 01 op1 CRn CRm op2 Rt' =>
          System (SystemInstruction (op1, op2, CRn, CRm, [L], Rt))
+
+      ------------------------
+      -- FloatingPointAdd
+      ------------------------
+      case '00011110 ftype 1 Rm 001 op 10 Rn Rd' =>
+         Data(FloatingPointAddSub (op, ftype, Rd, Rn, Rm))
 
       ------------------------
       -- Unallocated
