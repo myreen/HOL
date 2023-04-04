@@ -120,3 +120,29 @@ define Data > FloatingPointAddSub(
    }
 }
 
+------------------------
+-- FMOV Dd, Xn
+-- FMOV Xd, Dn
+------------------------
+
+define Data > FloatingPointMov(
+  sf :: bits(1), ftype :: bits(2), opcode0 :: bits(1), d :: reg, n ::
+reg) =
+{
+   match (sf, ftype)
+   {
+      case ('1', '11') =>
+--         match (ftype)
+--         {
+--            case '11' =>
+               match (opcode0)
+                  {
+                     case '0' => D(d) <- X(n)
+                     case '1' => X(d) <- D(n)
+                  }
+--            case _  => #UNSUPPORTED "Floating-point op not double-precision"
+ --        }
+      case _  => #UNSUPPORTED "Floating-point op not double-precision"
+   }
+}
+

@@ -1371,7 +1371,7 @@ instruction LoadStoreAcquire
 
 pattern
 {
-   op S sf         ` 1
+   op S sf rmode   ` 1
    CRm             ` 4
    Rs Rm Rn
    Rd Rt Rt2       ` 5
@@ -1943,6 +1943,12 @@ instruction Decode (w::word) =
       ------------------------
       case '00011110 ftype 1 Rm 001 op 10 Rn Rd' =>
          Data(FloatingPointAddSub (op, ftype, Rd, Rn, Rm))
+
+      ------------------------
+      -- FloatingPointMov
+      ------------------------
+      case 'sf 0011110 ftype 1 0 rmode 11 opcode0 `1 000000 Rn Rd' =>
+         Data(FloatingPointMov (sf, ftype, opcode0, Rd, Rn))
 
       ------------------------
       -- Unallocated
