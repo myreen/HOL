@@ -1951,6 +1951,12 @@ instruction Decode (w::word) =
          Data(FloatingPointMov (sf, ftype, opcode0, Rd, Rn))
 
       ------------------------
+      -- FloatingPointCompare
+      ------------------------
+      case '00011110 ftype 1 Rm 001000 Rn opc `2 000' =>
+         Data(FloatingPointCompare (ftype, opc, Rm, Rn))
+
+      ------------------------
       -- Unallocated
       ------------------------
       case _ => Unallocated

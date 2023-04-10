@@ -95,6 +95,19 @@ dword FPAdd64 (op1::dword, op2::dword) = FP64_Add (RoundingMode, op1, op2)
 dword FPSub64 (op1::dword, op2::dword) = FP64_Sub (RoundingMode, op1, op2)
 dword FPMul64 (op1::dword, op2::dword) = FP64_Mul (RoundingMode, op1, op2)
 
+bool * bool * bool * bool FPCompare64 (op1::dword, op2::dword) =
+   -- See ARM ARM J1-11445
+   if FP64_IsNan (op1) or FP64_IsNan (op2) then
+      (false, false, true, true)                 -- '0011'
+   else if FP64_Equal (op1, op2) then
+      (false, true, true, false)                 -- '0110'
+   else if FP64_LessThan (op1, op2) then
+      (true, false, false, false)                -- '1000'
+   else
+      (false, false, true, false)                -- '0010'
+
+bits(64) FPZero64 (sign::bits(1)) = sign : 0`63
+
 ------------------------
 -- Instruction Semantics
 ------------------------
@@ -126,22 +139,40 @@ define Data > FloatingPointAddSub(
 ------------------------
 
 define Data > FloatingPointMov(
-  sf :: bits(1), ftype :: bits(2), opcode0 :: bits(1), d :: reg, n ::
-reg) =
+  sf :: bits(1), ftype :: bits(2), opcode0 :: bits(1), d :: reg, n :: reg) =
 {
    match (sf, ftype)
    {
       case ('1', '11') =>
---         match (ftype)
---         {
---            case '11' =>
-               match (opcode0)
-                  {
-                     case '0' => D(d) <- X(n)
-                     case '1' => X(d) <- D(n)
-                  }
---            case _  => #UNSUPPORTED "Floating-point op not double-precision"
- --        }
+         match (opcode0)
+            {
+               case '0' => D(d) <- X(n)
+               case '1' => X(d) <- D(n)
+            }
+      case _  => #UNSUPPORTED "Floating-point op not double-precision"
+   }
+}
+
+------------------------
+-- FCMP dn, dm
+-- FCMP dn, #0.0
+-- FCMPE dn, dm
+-- FCMPE dn, #0.0
+------------------------
+
+define Data > FloatingPointCompare(
+  ftype :: bits(2), opc :: bits(2), m :: reg, n :: reg) =
+{
+   match (ftype)
+   {
+      case '01' =>
+         match (opc<0:0>)
+            {
+               case '0' =>
+                  SetTheFlags(true, FPCompare64(D(n), D(m)))
+               case '1' =>
+                  SetTheFlags(true, FPCompare64(D(n), FPZero64('0')))
+            }
       case _  => #UNSUPPORTED "Floating-point op not double-precision"
    }
 }

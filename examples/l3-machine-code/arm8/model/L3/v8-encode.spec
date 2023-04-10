@@ -229,6 +229,8 @@ MachineCode e_data (i::Data) =
          ARM8 ('00011110' : ftype : '1' : rm : '001' : op : '10' : rn : rd)
       case FloatingPointMov (sf, ftype, opcode0, rd, rn) =>
          ARM8 (sf : '0011110' : ftype : '10011' : opcode0 : '000000' : rn : rd)
+      case FloatingPointCompare (ftype, opc, rm, rn) =>
+         ARM8 ('00011110' : ftype : '1' : rm : '001000' : rn : opc : '000')
    } -- e_data
 
 word e_debug (i::Debug) =
