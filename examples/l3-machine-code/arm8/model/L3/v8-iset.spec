@@ -1957,6 +1957,12 @@ instruction Decode (w::word) =
          Data(FloatingPointCompare (ftype, opc, Rm, Rn))
 
       ------------------------
+      -- LoadStoreRegisterFloatingPoint
+      ------------------------
+      case 'size`2 111101  opc`2 imm12 Rn Rt' =>
+         LoadStore(LoadStoreRegisterFloatingPoint(size, opc, imm12, Rn, Rt))
+
+      ------------------------
       -- Unallocated
       ------------------------
       case _ => Unallocated

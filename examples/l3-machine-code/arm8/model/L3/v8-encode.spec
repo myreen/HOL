@@ -500,6 +500,9 @@ MachineCode e_load_store (i::LoadStore) =
          else
             BadCode ("LoadStoreAcquirePair")
       }
+      case LoadStoreRegisterFloatingPoint(size, opc, imm12, rn, rt) =>
+         ARM8(size : '111101' : opc :  imm12 :  rn : rt)
+
    }
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --

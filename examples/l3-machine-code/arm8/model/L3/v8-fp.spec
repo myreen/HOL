@@ -154,10 +154,10 @@ define Data > FloatingPointMov(
 }
 
 ------------------------
--- FCMP dn, dm
--- FCMP dn, #0.0
--- FCMPE dn, dm
--- FCMPE dn, #0.0
+-- FCMP Dn, Dm
+-- FCMP Dn, #0.0
+-- FCMPE Dn, Dm
+-- FCMPE Dn, #0.0
 ------------------------
 
 define Data > FloatingPointCompare(
@@ -172,6 +172,39 @@ define Data > FloatingPointCompare(
                   SetTheFlags(true, FPCompare64(D(n), D(m)))
                case '1' =>
                   SetTheFlags(true, FPCompare64(D(n), FPZero64('0')))
+            }
+      case _  => #UNSUPPORTED "Floating-point op not double-precision"
+   }
+}
+
+------------------------
+-- LDR Dt, [<Xn|SP>, #pimm]
+-- STR Dt, [<Xn|SP>, #pimm]
+------------------------
+
+define LoadStore > LoadStoreRegisterFloatingPoint(
+   size :: bits(2), opc :: bits(2), imm12 :: bits(12), n :: reg, t :: reg) =
+{
+   address = if n == 31 then
+                SP
+             else
+                X(n);
+   address =  address + ZeroExtend(imm12);
+   match (size)
+   {
+      case '11' =>
+         match (opc<0:0>) -- bit 22: 0 => store / 1 => load
+            {
+               case '0' =>
+                  {
+                     data = D(t);
+                     Mem(address, 8, AccType_NORMAL) <- data
+                  }
+               case '1' =>
+                  {
+                     data`64 = Mem(address, 8, AccType_NORMAL);
+                     D(t) <- data
+                  }
             }
       case _  => #UNSUPPORTED "Floating-point op not double-precision"
    }
