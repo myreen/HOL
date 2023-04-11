@@ -1945,6 +1945,24 @@ instruction Decode (w::word) =
          Data(FloatingPointAddSub (op, ftype, Rd, Rn, Rm))
 
       ------------------------
+      -- FloatingPointMul
+      ------------------------
+      case '00011110 ftype 1 Rm 000010 Rn Rd' =>
+         Data(FloatingPointMul (ftype, Rd, Rn, Rm))
+
+      ------------------------
+      -- FloatingPointMulAdd
+      ------------------------
+      case '00011111 ftype 0 Rm 0 Ra Rn Rd' =>
+         Data(FloatingPointMulAdd (ftype, Rd, Rn, Rm, Ra))
+
+      ------------------------
+      -- FloatingPointDiv
+      ------------------------
+      case '00011110 ftype 1 Rm 000110 Rn Rd' =>
+         Data(FloatingPointDiv (ftype, Rd, Rn, Rm))
+
+      ------------------------
       -- FloatingPointMov
       ------------------------
       case 'sf 0011110 ftype 1 0 rmode 11 opcode0 `1 000000 Rn Rd' =>

@@ -227,6 +227,12 @@ MachineCode e_data (i::Data) =
          ARM8 ('11011010110000000000' : [opc]`2 : rn : rd)
       case FloatingPointAddSub (op, ftype, rd, rn, rm) =>
          ARM8 ('00011110' : ftype : '1' : rm : '001' : op : '10' : rn : rd)
+      case FloatingPointMul (ftype, rd, rn, rm) =>
+         ARM8 ('00011110' : ftype : '1' : rm : '000010' : rn : rd)
+      case FloatingPointMulAdd (ftype, rd, rn, rm, ra) =>
+         ARM8 ('00011111' : ftype : '0' : rm : '0' : ra : rn : rd)
+      case FloatingPointDiv (ftype, rd, rn, rm) =>
+         ARM8 ('00011110' : ftype : '1' : rm : '000110' : rn : rd)
       case FloatingPointMov (sf, ftype, opcode0, rd, rn) =>
          ARM8 (sf : '0011110' : ftype : '10011' : opcode0 : '000000' : rn : rd)
       case FloatingPointCompare (ftype, opc, rm, rn) =>

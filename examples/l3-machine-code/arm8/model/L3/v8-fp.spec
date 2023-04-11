@@ -94,6 +94,7 @@ ieee_rounding RoundingMode =
 dword FPAdd64 (op1::dword, op2::dword) = FP64_Add (RoundingMode, op1, op2)
 dword FPSub64 (op1::dword, op2::dword) = FP64_Sub (RoundingMode, op1, op2)
 dword FPMul64 (op1::dword, op2::dword) = FP64_Mul (RoundingMode, op1, op2)
+dword FPDiv64 (op1::dword, op2::dword) = FP64_Div (RoundingMode, op1, op2)
 
 bool * bool * bool * bool FPCompare64 (op1::dword, op2::dword) =
    -- See ARM ARM J1-11445
@@ -149,6 +150,52 @@ define Data > FloatingPointMov(
                case '0' => D(d) <- X(n)
                case '1' => X(d) <- D(n)
             }
+      case _  => #UNSUPPORTED "Floating-point op not double-precision"
+   }
+}
+
+------------------------
+-- FMUL Dd, Dn, Dm
+------------------------
+
+define Data > FloatingPointMul(
+  ftype :: bits(2), d :: reg, n :: reg, m :: reg) =
+{
+   match (ftype)
+   {
+      case '01' => D(d) <- FPMul64(D(n), D(m))
+      case _  => #UNSUPPORTED "Floating-point op not double-precision"
+   }
+}
+
+------------------------
+-- FMADD Dd, Dn, Dm, Da
+------------------------
+
+define Data > FloatingPointMulAdd(
+  ftype :: bits(2), d :: reg, n :: reg, m :: reg, a :: reg) =
+{
+   match (ftype)
+   {
+      case '01' =>
+         {
+            product = FPMul64(D(n), D(m));
+            D(d) <- FPAdd64(D(a), product)
+         }
+      case _  => #UNSUPPORTED "Floating-point op not double-precision"
+   }
+}
+
+------------------------
+-- FDIV Dd, Dn, Dm
+------------------------
+
+define Data > FloatingPointDiv(
+  ftype :: bits(2), d :: reg, n :: reg, m :: reg) =
+{
+   match (ftype)
+   {
+      case '01' => D(d) <- FPDiv64(D(n), D(m))
       case _  => #UNSUPPORTED "Floating-point op not double-precision"
    }
 }
