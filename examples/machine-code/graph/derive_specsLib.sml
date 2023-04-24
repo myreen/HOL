@@ -758,9 +758,15 @@ fun derive_specs_for sec_name = let
 
 (*
 
+  model ........ up to date?
+  step ......... yet to be updated
+  prog ......... yet to be updated
+  decompiler ... yet to be updated
+
   val base_name = "kernel-riscv/kernel-riscv"
   val base_name = "loop-riscv/example"
   val base_name = "example-arm8/SysModel"
+  val base_name = "armv8_example/s"
   val _ = read_files base_name []
   val _ = open_current "test"
   val sec_name = "lookupSlot"
@@ -771,6 +777,7 @@ fun derive_specs_for sec_name = let
   val sec_name = "get_num_avail_p_regs"
   val sec_name = "ensureEmptySlot"
   val sec_name = "after"
+  val sec_name = "m"
 
   val _ = file_readerLib.show_code sec_name
 
@@ -794,6 +801,8 @@ fun derive_specs_for sec_name = let
   val instruction = "910083ff"
   val instruction = "94000000"
   val th = arm8_spec instruction
+
+arm8_progLib.arm8_spec_hex "fd0007e0"
 
 *)
 

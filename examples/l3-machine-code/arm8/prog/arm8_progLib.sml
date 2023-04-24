@@ -712,6 +712,9 @@ end
 
 (* Testing...
 
+val s = "fd0007e0"
+arm8_spec_hex s
+
 open arm8_progLib
 
 local

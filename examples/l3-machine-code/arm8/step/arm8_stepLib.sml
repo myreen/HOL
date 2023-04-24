@@ -371,6 +371,23 @@ val LoadStorePair_rwt =
       [32, 64]
       |> List.concat
 
+val float_lemma = prove(
+  “(((0 >< 0):word2 -> word1) (v2w [b1; b2]) = 0w <=> ~b2) /\
+   (((0 >< 0):word2 -> word1) (v2w [b1; b2]) = 1w <=> b2)”,
+  Cases_on ‘b2’ \\ EVAL_TAC);
+
+val LoadStoreRegisterFloatingPoint_rwt =
+  let
+    val thms_T =
+      EV [dfn'LoadStoreRegisterFloatingPoint_def] (SPLIT_31 "n") []
+         ``dfn'LoadStoreRegisterFloatingPoint (v2w [T;T],v2w [b1;T],imm12,n,t)``
+      |> map (SIMP_RULE std_ss [float_lemma,write'D_def,mem_dword_def,D_def])
+    val thms_F =
+      EV [dfn'LoadStoreRegisterFloatingPoint_def] (SPLIT_31 "n") []
+         ``dfn'LoadStoreRegisterFloatingPoint (v2w [T;T],v2w [b1;F],imm12,n,t)``
+      |> map (SIMP_RULE std_ss [float_lemma,write'D_def,mem_dword_def,D_def])
+  in thms_T @ thms_F end
+
 local
    val f = UNDISCH o DECIDE o Parse.Term
 
@@ -578,52 +595,53 @@ end
 
 val ps = (List.concat o List.map decode_rwt)
   [
-   ("Address",                      "___TFFFF________________________"),
-   ("AddSubShiftedRegister32",      "F..FTFTT__F_____F_______________"),
-   ("AddSubShiftedRegister64",      "T..FTFTT__F_____________________"),
-   ("AddSubExtendRegister",         "...FTFTTFFT_____________________"),
-   ("AddSubImmediate",              "...TFFFTF_______________________"),
-   ("AddSubCarry",                  "._.TTFTFFFF_____FFFFFF__________"),
-   ("LogicalShiftedRegister32",     "F..FTFTF________F_______________"),
-   ("LogicalShiftedRegister64",     "T..FTFTF________________________"),
-   ("LogicalImmediate32",           "F..TFFTFFF______________________"),
-   ("LogicalImmediate64",           "T..TFFTFF_______________________"),
-   ("Shift",                        ".FFTTFTFTTF_____FFTF____________"),
-   ("MoveWide32",                   "F__TFFTFTF______________________"),
-   ("MoveWide64",                   "T__TFFTFT_______________________"),
-   ("BitfieldMove32",               "F__TFFTTFFF_____F_______________"),
-   ("BitfieldMove64",               "T__TFFTTFT______________________"),
-   ("ConditionalCompareImmediate",  "..TTTFTFFTF_________TF_____F____"),
-   ("ConditionalCompareRegister",   "..TTTFTFFTF_________FF_____F____"),
-   ("ConditionalSelect",            "._FTTFTFTFF_________F___________"),
-   ("CountLeading",                 ".TFTTFTFTTFFFFFFFFFTF___________"),
-   ("ExtractRegister32",            "FFFTFFTTTFF_____F_______________"),
-   ("ExtractRegister64",            "TFFTFFTTTTF_____________________"),
-   ("Division",                     ".FFTTFTFTTF_____FFFFT___________"),
-   ("MultiplyAddSub",               ".FFTTFTTFFF_____________________"),
-   ("MultiplyAddSubLong",           "TFFTTFTT_FT_____________________"),
-   ("MultiplyHigh",                 "TFFTTFTT_TF_____F_______________"),
-   ("Reverse32",                    "FTFTTFTFTTFFFFFFFFFF____________"),
-   ("Reverse64",                    "TTFTTFTFTTFFFFFFFFFF____________"),
-   ("CRC8",                         "FFFTTFTFTTF_____FTF_FF__________"),
-   ("CRC16",                        "FFFTTFTFTTF_____FTF_FT__________"),
-   ("CRC32",                        "FFFTTFTFTTF_____FTF_TF__________"),
-   ("CRC64",                        "TFFTTFTFTTF_____FTF_TT__________"),
-   ("BranchConditional",            "FTFTFTFF___________________F____"),
-   ("BranchImmediate",              ".FFTFT__________________________"),
-   ("BranchRegisterJMP",            "TTFTFTTFFFFTTTTTFFFFFF_____FFFFF"),
-   ("BranchRegisterCALL",           "TTFTFTTFFFTTTTTTFFFFFF_____FFFFF"),
-   ("BranchRegisterRET",            "TTFTFTTFFTFTTTTTFFFFFF_____FFFFF"),
-   ("CompareAndBranch",             ".FTTFTF_________________________"),
-   ("TestBitAndBranch",             ".FTTFTT.________________________"),
-   ("LoadStoreImmediate-1",         "..TTTFFF..F__________.__________"),
-   ("LoadStoreImmediate-2",         "..TTTFFT..______________________"),
-   ("LoadLiteral",                  "..FTTFFF________________________"),
-   ("LoadStoreRegister",            "..TTTFFF..T______T__TF__________"),
-   ("StorePair32",                  "FFTFTFF_.F______________________"),
-   ("LoadPair32",                   "F_TFTFF_.T______________________"),
-   ("LoadStorePair64",              "TFTFTFF_..______________________"),
-   ("NoOperation",                  "TTFTFTFTFFFFFFTTFFTFFFFFFFFTTTTT")
+   ("Address",                        "___TFFFF________________________"),
+   ("AddSubShiftedRegister32",        "F..FTFTT__F_____F_______________"),
+   ("AddSubShiftedRegister64",        "T..FTFTT__F_____________________"),
+   ("AddSubExtendRegister",           "...FTFTTFFT_____________________"),
+   ("AddSubImmediate",                "...TFFFTF_______________________"),
+   ("AddSubCarry",                    "._.TTFTFFFF_____FFFFFF__________"),
+   ("LogicalShiftedRegister32",       "F..FTFTF________F_______________"),
+   ("LogicalShiftedRegister64",       "T..FTFTF________________________"),
+   ("LogicalImmediate32",             "F..TFFTFFF______________________"),
+   ("LogicalImmediate64",             "T..TFFTFF_______________________"),
+   ("Shift",                          ".FFTTFTFTTF_____FFTF____________"),
+   ("MoveWide32",                     "F__TFFTFTF______________________"),
+   ("MoveWide64",                     "T__TFFTFT_______________________"),
+   ("BitfieldMove32",                 "F__TFFTTFFF_____F_______________"),
+   ("BitfieldMove64",                 "T__TFFTTFT______________________"),
+   ("ConditionalCompareImmediate",    "..TTTFTFFTF_________TF_____F____"),
+   ("ConditionalCompareRegister",     "..TTTFTFFTF_________FF_____F____"),
+   ("ConditionalSelect",              "._FTTFTFTFF_________F___________"),
+   ("CountLeading",                   ".TFTTFTFTTFFFFFFFFFTF___________"),
+   ("ExtractRegister32",              "FFFTFFTTTFF_____F_______________"),
+   ("ExtractRegister64",              "TFFTFFTTTTF_____________________"),
+   ("Division",                       ".FFTTFTFTTF_____FFFFT___________"),
+   ("MultiplyAddSub",                 ".FFTTFTTFFF_____________________"),
+   ("MultiplyAddSubLong",             "TFFTTFTT_FT_____________________"),
+   ("MultiplyHigh",                   "TFFTTFTT_TF_____F_______________"),
+   ("Reverse32",                      "FTFTTFTFTTFFFFFFFFFF____________"),
+   ("Reverse64",                      "TTFTTFTFTTFFFFFFFFFF____________"),
+   ("CRC8",                           "FFFTTFTFTTF_____FTF_FF__________"),
+   ("CRC16",                          "FFFTTFTFTTF_____FTF_FT__________"),
+   ("CRC32",                          "FFFTTFTFTTF_____FTF_TF__________"),
+   ("CRC64",                          "TFFTTFTFTTF_____FTF_TT__________"),
+   ("BranchConditional",              "FTFTFTFF___________________F____"),
+   ("BranchImmediate",                ".FFTFT__________________________"),
+   ("BranchRegisterJMP",              "TTFTFTTFFFFTTTTTFFFFFF_____FFFFF"),
+   ("BranchRegisterCALL",             "TTFTFTTFFFTTTTTTFFFFFF_____FFFFF"),
+   ("BranchRegisterRET",              "TTFTFTTFFTFTTTTTFFFFFF_____FFFFF"),
+   ("CompareAndBranch",               ".FTTFTF_________________________"),
+   ("TestBitAndBranch",               ".FTTFTT.________________________"),
+   ("LoadStoreImmediate-1",           "..TTTFFF..F__________.__________"),
+   ("LoadStoreImmediate-2",           "..TTTFFT..______________________"),
+   ("LoadLiteral",                    "..FTTFFF________________________"),
+   ("LoadStoreRegister",              "..TTTFFF..T______T__TF__________"),
+   ("StorePair32",                    "FFTFTFF_.F______________________"),
+   ("LoadPair32",                     "F_TFTFF_.T______________________"),
+   ("LoadStorePair64",                "TFTFTFF_..______________________"),
+   ("LoadStoreRegisterFloatingPoint", "TTTTTTFT________________________"),
+   ("NoOperation",                    "TTFTFTFTFFFFFFTTFFTFFFFFFFFTTTTT")
   ]
 
 local
@@ -639,6 +657,12 @@ in
          [tm] => SOME tm
        | _ => NONE
 end
+(*
+val s = "LoadStoreRegisterFloatingPoint"
+val v = bitstringSyntax.bitstring_of_hexstring "fd0007e0"
+val SOME r = arm8_instruction v
+val SOME t = arm8_pattern r
+*)
 
 local
    val (_, mk_Decode, _, _) = arm8_monop "Decode"
@@ -688,7 +712,8 @@ local
       MultiplyHigh_rwt @ Reverse32_rwt @ Reverse64_rwt @ CRC_rwt @
       BranchImmediate_rwt @ BranchRegister_rwt @ BranchConditional_rwt @
       CompareAndBranch_rwt @ TestBitAndBranch_rwt @ LoadStoreImmediate_rwt @
-      LoadStoreRegister_rwt @ LoadLiteral_rwt @ LoadStorePair_rwt @ Nop_rwt
+      LoadStoreRegister_rwt @ LoadLiteral_rwt @ LoadStorePair_rwt @ Nop_rwt @
+      LoadStoreRegisterFloatingPoint_rwt
       )
    val net = mk_net net_list
    val get_next = Term.rator o utilsLib.lhsc
@@ -789,6 +814,31 @@ end
 val arm8_step_code = List.map arm8_step_hex o arm8AssemblerLib.arm8_code
 
 (* Testing...
+
+val s = "fd0007e0"; arm8_step_hex s
+val s = "fd0003e1"; arm8_step_hex s
+val s = "fd4007e1"; arm8_step_hex s
+val s = "fd4003e0"; arm8_step_hex s
+val s = "fd4007e1"; arm8_step_hex s
+val s = "fd4003e0"; arm8_step_hex s
+val s = "fd0017e0"; arm8_step_hex s
+val s = "fd4017e0"; arm8_step_hex s
+val s = "fd001be0"; arm8_step_hex s
+val s = "fd4017e0"; arm8_step_hex s
+val s = "fd0013e0"; arm8_step_hex s
+val s = "fd401be0"; arm8_step_hex s
+val s = "fd0013e0"; arm8_step_hex s
+val s = "fd4013e0"; arm8_step_hex s
+val s = "fd001fe0"; arm8_step_hex s
+val s = "fd401fe0"; arm8_step_hex s
+
+val s = "1e602030"; arm8_step_hex s (* fail *)
+val s = "1e603820"; arm8_step_hex s (* fail *)
+val s = "9e670001"; arm8_step_hex s (* fail *)
+val s = "1e612800"; arm8_step_hex s (* fail *)
+
+val v = bitstringSyntax.bitstring_of_hexstring s
+val r = arm8_step_hex s
 
 open arm8_stepLib
 
