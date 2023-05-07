@@ -371,10 +371,47 @@ val LoadStorePair_rwt =
       [32, 64]
       |> List.concat
 
+val FloatingPointAddSub_rwt =
+   let
+      val thms_Add = EV [dfn'FloatingPointAddSub_def] [] []
+        ``dfn'FloatingPointAddSub (v2w [F],v2w [F; T],m,n,d)``
+     |> map (SIMP_RULE std_ss [write'D_def,mem_dword_def,D_def]);
+      val thms_Sub = EV [dfn'FloatingPointAddSub_def] [] []
+        ``dfn'FloatingPointAddSub (v2w [T],v2w [F; T],m,n,d)``
+     |> map (SIMP_RULE std_ss [write'D_def,mem_dword_def,D_def]);
+   in thms_Add @ thms_Sub end;
+
+val FloatingPointMul_rwt =
+   EV [dfn'FloatingPointMul_def] [] []
+     ``dfn'FloatingPointMul (v2w[F; T],m,n,d)``
+   |> map (SIMP_RULE std_ss [write'D_def,mem_dword_def,D_def]);
+
+val FloatingPointMulAdd_rwt =
+   EV [dfn'FloatingPointMulAdd_def] [] []
+     ``dfn'FloatingPointMulAdd (v2w[F; T],m,a,n,d)``
+   |> map (SIMP_RULE std_ss [write'D_def,mem_dword_def,D_def]);
+
+val FloatingPointDiv_rwt =
+   EV [dfn'FloatingPointDiv_def] [] []
+     ``dfn'FloatingPointDiv (v2w[F; T],m,n,d)``
+   |> map (SIMP_RULE std_ss [write'D_def,mem_dword_def,D_def]);
+
 val float_lemma = prove(
   “(((0 >< 0):word2 -> word1) (v2w [b1; b2]) = 0w <=> ~b2) /\
    (((0 >< 0):word2 -> word1) (v2w [b1; b2]) = 1w <=> b2)”,
   Cases_on ‘b2’ \\ EVAL_TAC);
+
+val FloatingPointCompare_rwt =
+   let val thms_cmp_reg =
+      EV [dfn'FloatingPointCompare_def] [] []
+        ``dfn'FloatingPointCompare (v2w[F; T],v2w[T;F],m,n)``
+      |> map (SIMP_RULE std_ss [float_lemma,write'D_def,mem_dword_def,D_def]);
+      val thms_cmp_0 =
+      EV [dfn'FloatingPointCompare_def] [] []
+        ``dfn'FloatingPointCompare (v2w[F; T],v2w[T;T],m,n)``
+      |> map (SIMP_RULE std_ss [float_lemma,write'D_def,mem_dword_def,D_def]);
+   in thms_cmp_reg @ thms_cmp_0 end;
+
 
 val LoadStoreRegisterFloatingPoint_rwt =
   let
@@ -387,6 +424,17 @@ val LoadStoreRegisterFloatingPoint_rwt =
          ``dfn'LoadStoreRegisterFloatingPoint (v2w [T;T],v2w [b1;F],imm12,n,t)``
       |> map (SIMP_RULE std_ss [float_lemma,write'D_def,mem_dword_def,D_def])
   in thms_T @ thms_F end
+
+val FloatingPointMov_rwt =
+   let val thms_x_to_d =
+      EV [dfn'FloatingPointMov_def] (SPLIT_31 "n") []
+        ``dfn'FloatingPointMov (v2w[T],v2w[F;T],v2w[F],n,d)``
+      |> map (SIMP_RULE std_ss [write'D_def,mem_dword_def,D_def]);
+      val thms_d_to_x =
+      EV [dfn'FloatingPointMov_def] (SPLIT_31 "d") []
+        ``dfn'FloatingPointMov (v2w[T],v2w[F;T],v2w[T],n,d)``
+      |> map (SIMP_RULE std_ss [write'D_def,mem_dword_def,D_def]);
+   in thms_x_to_d @ thms_d_to_x end;
 
 local
    val f = UNDISCH o DECIDE o Parse.Term
@@ -640,7 +688,13 @@ val ps = (List.concat o List.map decode_rwt)
    ("StorePair32",                    "FFTFTFF_.F______________________"),
    ("LoadPair32",                     "F_TFTFF_.T______________________"),
    ("LoadStorePair64",                "TFTFTFF_..______________________"),
+   ("FloatingPointAddSub",            "FFFTTTTF__T_____FFT_TF__________"),
+   ("FloatingPointMul",               "FFFTTTTF__T_____FFFFTF__________"),
+   ("FloatingPointMulAdd",            "FFFTTTTT__F_____F_______________"),
+   ("FloatingPointDiv",               "FFFTTTTF__T_____FFFTTF__________"),
+   ("FloatingPointCompare",           "FFFTTTTF__T_____FFTFFF__________"),
    ("LoadStoreRegisterFloatingPoint", "TTTTTTFT________________________"),
+   ("FloatingPointMov",               "_FFTTTTF__TF_TT_FFFFFF__________"),
    ("NoOperation",                    "TTFTFTFTFFFFFFTTFFTFFFFFFFFTTTTT")
   ]
 
@@ -713,8 +767,12 @@ local
       BranchImmediate_rwt @ BranchRegister_rwt @ BranchConditional_rwt @
       CompareAndBranch_rwt @ TestBitAndBranch_rwt @ LoadStoreImmediate_rwt @
       LoadStoreRegister_rwt @ LoadLiteral_rwt @ LoadStorePair_rwt @ Nop_rwt @
-      LoadStoreRegisterFloatingPoint_rwt
-      )
+      FloatingPointAddSub_rwt @ FloatingPointMul_rwt @
+      FloatingPointMulAdd_rwt @ FloatingPointDiv_rwt @
+      FloatingPointCompare_rwt @
+      LoadStoreRegisterFloatingPoint_rwt @
+      FloatingPointMov_rwt
+     )
    val net = mk_net net_list
    val get_next = Term.rator o utilsLib.lhsc
    val r = REWRITE_RULE []
@@ -815,32 +873,37 @@ val arm8_step_code = List.map arm8_step_hex o arm8AssemblerLib.arm8_code
 
 (* Testing...
 
-val s = "fd0007e0"; arm8_step_hex s
-val s = "fd0003e1"; arm8_step_hex s
-val s = "fd4007e1"; arm8_step_hex s
-val s = "fd4003e0"; arm8_step_hex s
-val s = "fd4007e1"; arm8_step_hex s
-val s = "fd4003e0"; arm8_step_hex s
-val s = "fd0017e0"; arm8_step_hex s
-val s = "fd4017e0"; arm8_step_hex s
-val s = "fd001be0"; arm8_step_hex s
-val s = "fd4017e0"; arm8_step_hex s
-val s = "fd0013e0"; arm8_step_hex s
-val s = "fd401be0"; arm8_step_hex s
-val s = "fd0013e0"; arm8_step_hex s
-val s = "fd4013e0"; arm8_step_hex s
-val s = "fd001fe0"; arm8_step_hex s
-val s = "fd401fe0"; arm8_step_hex s
-
-val s = "1e602030"; arm8_step_hex s (* fail *)
-val s = "1e603820"; arm8_step_hex s (* fail *)
-val s = "9e670001"; arm8_step_hex s (* fail *)
-val s = "1e612800"; arm8_step_hex s (* fail *)
-
-val v = bitstringSyntax.bitstring_of_hexstring s
-val r = arm8_step_hex s
-
 open arm8_stepLib
+
+val s = "1e610800"; arm8_step_hex s (* fmul	d0, d0, d1 *);
+val s = "1f410800"; arm8_step_hex s (* fmadd	d0, d0, d1, d2 *);
+(* (* FMOV (immediate) not supported yet *) val s = "1e651001"; arm8_step_hex s (* fmov	d1, #1.200000000000000000e+01 *); *)
+val s = "1e612800"; arm8_step_hex s (* fadd	d0, d0, d1 *);
+val s = "1e611800"; arm8_step_hex s (* fdiv	d0, d0, d1 *);
+val s = "1e613800"; arm8_step_hex s (* fsub	d0, d0, d1 *);
+val s = "fd0007e0"; arm8_step_hex s (* str	d0, [sp, #8] *);
+val s = "fd0003e1"; arm8_step_hex s (* str	d1, [sp] *);
+val s = "fd4007e1"; arm8_step_hex s (* ldr	d1, [sp, #8] *);
+val s = "fd4003e0"; arm8_step_hex s (* ldr	d0, [sp] *);
+val s = "1e602030"; arm8_step_hex s (* fcmpe	d1, d0 *);
+val s = "fd4007e1"; arm8_step_hex s (* ldr	d1, [sp, #8] *);
+val s = "fd4003e0"; arm8_step_hex s (* ldr	d0, [sp] *);
+val s = "1e603820"; arm8_step_hex s (* fsub	d0, d1, d0 *);
+val s = "fd0017e0"; arm8_step_hex s (* str	d0, [sp, #40] *);
+val s = "fd4017e0"; arm8_step_hex s (* ldr	d0, [sp, #40] *);
+val s = "9e670001"; arm8_step_hex s (* fmov	d1, x0;
+val s = "1e612800"; arm8_step_hex s (* fadd	d0, d0, d1 *);
+val s = "fd001be0"; arm8_step_hex s (* str	d0, [sp, #48] *);
+val s = "fd4017e0"; arm8_step_hex s (* ldr	d0, [sp, #40] *);
+val s = "fd0013e0"; arm8_step_hex s (* str	d0, [sp, #32] *);
+val s = "fd401be0"; arm8_step_hex s (* ldr	d0, [sp, #48] *);
+val s = "fd0013e0"; arm8_step_hex s (* str	d0, [sp, #32] *);
+val s = "fd4013e0"; arm8_step_hex s (* ldr	d0, [sp, #32] *);
+val s = "fd001fe0"; arm8_step_hex s (* str	d0, [sp, #56] *);
+val s = "fd401fe0"; arm8_step_hex s (* ldr	d0, [sp, #56] *);
+
+val v = bitstringSyntax.bitstring_of_hexstring s;
+
 
 local
    val gen = Random.newgenseed 1.0
