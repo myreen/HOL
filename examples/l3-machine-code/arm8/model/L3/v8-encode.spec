@@ -225,18 +225,21 @@ MachineCode e_data (i::Data) =
             ARM8 ('01011010110000000000' : [opc]`2 : rn : rd)
       case Reverse@64 (_, opc, rn, rd) =>
          ARM8 ('11011010110000000000' : [opc]`2 : rn : rd)
-      case FloatingPointAddSub (op, ftype, rd, rn, rm) =>
+      case FloatingPointAddSub (op, ftype, rm, rn, rd) =>
          ARM8 ('00011110' : ftype : '1' : rm : '001' : op : '10' : rn : rd)
-      case FloatingPointMul (ftype, rd, rn, rm) =>
+      case FloatingPointMul (ftype, rm, rn, rd) =>
          ARM8 ('00011110' : ftype : '1' : rm : '000010' : rn : rd)
-      case FloatingPointMulAdd (ftype, rd, rn, rm, ra) =>
+      case FloatingPointMulAdd (ftype, rm, ra, rn, rd) =>
          ARM8 ('00011111' : ftype : '0' : rm : '0' : ra : rn : rd)
-      case FloatingPointDiv (ftype, rd, rn, rm) =>
+      case FloatingPointDiv (ftype, rm, rn, rd) =>
          ARM8 ('00011110' : ftype : '1' : rm : '000110' : rn : rd)
-      case FloatingPointMov (sf, ftype, opcode0, rd, rn) =>
-         ARM8 (sf : '0011110' : ftype : '10011' : opcode0 : '000000' : rn : rd)
       case FloatingPointCompare (ftype, opc, rm, rn) =>
          ARM8 ('00011110' : ftype : '1' : rm : '001000' : rn : opc : '000')
+      case FloatingPointMov (sf, ftype, opcode0, rn, rd) =>
+         ARM8 (sf : '0011110' : ftype : '10011' : opcode0 : '000000' : rn : rd)
+      case FloatingPointMovImm (ftype, imm8, rd) =>
+         ARM8 ('00011110' : ftype : '1' : imm8 : '100' : '00000' : rd)
+
    } -- e_data
 
 word e_debug (i::Debug) =

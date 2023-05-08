@@ -109,6 +109,10 @@ bool * bool * bool * bool FPCompare64 (op1::dword, op2::dword) =
 
 bits(64) FPZero64 (sign::bits(1)) = sign : 0`63
 
+dword FPExpandImm8 (imm8 :: byte) =
+   -- See ARM ARM C2-244
+   imm8<7:7> : ~imm8<6:6> : imm8<6:6> ^ 8 : imm8<5:0> : '0' ^ 48
+
 ------------------------
 -- Instruction Semantics
 ------------------------
@@ -255,5 +259,19 @@ define Data > FloatingPointMov(
                case '1' => X(d) <- D(n)
             }
       case _  => #UNSUPPORTED "Floating-point op not double-precision"
+   }
+}
+
+------------------------
+-- FMOV Dd, #imm
+------------------------
+
+define Data > FloatingPointMovImm(
+  ftype :: bits(2), imm8 :: byte, d :: reg) =
+{
+   match ftype
+   {
+      case '01' => D(d) <- FPExpandImm8(imm8)
+      case _ => #UNSUPPORTED "Floating-point op not double-precision"
    }
 }

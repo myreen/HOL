@@ -129,6 +129,9 @@ examples/computability/lambda/computability-heap
 local-hol-heap
 examples/l3-machine-code/**/*-heap
 
+examples/l3-machine-code/arm8/model/L3/*.sig
+examples/l3-machine-code/arm8/model/L3/*.sml
+
 *Script_ttt.sml
 *.tttsave
 /TAGS

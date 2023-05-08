@@ -1377,6 +1377,7 @@ pattern
    Rd Rt Rt2       ` 5
    imm6 immr imms  ` 6
    imm7            ` 7
+   imm8            ` 8
    imm9            ` 9
    imm12           ` 12
    imm16           ` 16
@@ -1979,6 +1980,12 @@ instruction Decode (w::word) =
       ------------------------
       case 'sf 0011110 ftype 1 0 rmode 11 opcode0 `1 000000 Rn Rd' =>
          Data(FloatingPointMov (sf, ftype, opcode0, Rn, Rd))
+
+      ------------------------
+      -- FloatingPointMovImm
+      ------------------------
+      case '00011110 ftype 1 imm8 100 00000 Rd' =>
+         Data(FloatingPointMovImm (ftype, imm8, Rd))
 
       ------------------------
       -- Unallocated
