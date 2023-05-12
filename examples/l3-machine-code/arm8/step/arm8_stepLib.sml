@@ -698,7 +698,7 @@ val ps = (List.concat o List.map decode_rwt)
    ("LoadPair32",                     "F_TFTFF_.T______________________"),
    ("LoadStorePair64",                "TFTFTFF_..______________________"),
    ("FloatingPointAddSub",            "FFFTTTTF__T_____FFT_TF__________"),
-   ("FloatingPointMul",               "FFFTTTTF__T_____FFFFTF__________"),
+   ("FloatingPointMul",               "FFFTTTTFFTT_____FFFFTF__________"),
    ("FloatingPointMulAdd",            "FFFTTTTT__F_____F_______________"),
    ("FloatingPointDiv",               "FFFTTTTF__T_____FFFTTF__________"),
    ("FloatingPointCompare",           "FFFTTTTF__T_____FFTFFF__________"),
@@ -898,21 +898,47 @@ max_print_depth := 4000
 
 val s = "fd0007e0"; arm8_pattern s
 
-val s = "fd0007e0"; val th = arm8_stepLib.arm8_step_hex s |> hd
+val s = "fd0007e0"; val th = arm8_step_hex s |> hd
 
-th
+val store = th
   |> DISCH “s.PC = 8w”
   |> DISCH “s.SP_EL0 = 800w”
   |> DISCH “s.FPREG 0w = 8000w”
+  |> DISCH “s.FPCR.RMode = 0w”
   |> SIMP_RULE bool_ss []
   |> UNDISCH_ALL
   |> CONV_RULE (RAND_CONV EVAL)
 
+val s = "1e612800"; val th = arm8_step_hex s (* fadd	d0, d0, d1 *) |> hd
+
+val float_add = th
+  |> DISCH “s.PC = 8w”
+  |> DISCH “s.SP_EL0 = 800w”
+  |> DISCH “s.FPREG 0w = 8000w”
+  |> DISCH “s.FPREG 1w = 8100w”
+  |> DISCH “s.FPCR.RMode = 0w”
+  |> SIMP_RULE bool_ss []
+  |> UNDISCH_ALL
+  |> CONV_RULE (REWRITE_CONV [FPAdd64_def,RoundingMode_def] THENC RAND_CONV EVAL)
+  |> DISCH “s.FPCR.RMode = 0w”
+  |> SIMP_RULE bool_ss []
+  |> UNDISCH_ALL
+  |> CONV_RULE (REWRITE_CONV [FPAdd64_def,RoundingMode_def] THENC RAND_CONV EVAL)
 
 open arm8_stepLib
 
+fun arm8_step_hex' s =
+  let
+    val v = bitstringSyntax.bitstring_of_hexstring s
+    val SOME r = arm8_instruction v
+    val SOME v = arm8_pattern r
+    val res = arm8_step v
+  in res end
+
+(* TODO: make sure it works with arm8_step_hex' instead of arm8_step_hex *)
+
 val s = "1e610800"; arm8_step_hex s (* fmul	d0, d0, d1 *);
-val s = "1f410800"; arm8_step_hex s (* fmadd d0, d0, d1, d2 *);
+val s = "1f410800"; arm8_step_hex s (* fmadd    d0, d0, d1, d2 *);
 val s = "1e651001"; arm8_step_hex s (* fmov	d1, #1.200000000000000000e+01 *);
 val s = "1e612800"; arm8_step_hex s (* fadd	d0, d0, d1 *);
 val s = "1e611800"; arm8_step_hex s (* fdiv	d0, d0, d1 *);
