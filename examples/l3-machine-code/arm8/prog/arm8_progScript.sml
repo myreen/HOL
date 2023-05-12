@@ -12,6 +12,12 @@ val _ =
       [["undefined"], ["branch_hint"]]
       arm8_stepTheory.NextStateARM8_def
 
+(*
+  fetch "-" "arm8_FPREG_def"
+  fetch "-" "arm8_FPSR_def"
+  fetch "-" "arm8_FPCR_def"
+*)
+
 val arm8_instr_def = Define`
    arm8_instr (a, i: word32) =
    { (arm8_c_MEM a, arm8_d_word8 ((7 >< 0) i));

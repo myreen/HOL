@@ -4,6 +4,10 @@ struct
 open HolKernel boolLib bossLib
 open stateLib spec_databaseLib arm8_progTheory
 
+(*
+max_print_depth := 0
+*)
+
 structure Parse =
 struct
    open Parse
@@ -712,8 +716,46 @@ end
 
 (* Testing...
 
+val SOME s = arm8_stepLib.arm8_instruction v
+
+max_print_depth := 0
+max_print_depth := 0-1
+
 val s = "fd0007e0"
+val v = bitstringSyntax.bitstring_of_hexstring s
+val SOME r = arm8_stepLib.arm8_instruction v
+val SOME v = arm8_stepLib.arm8_pattern r
+val res = arm8_stepLib.arm8_step v
+
+arm_step r
+
+
+
+
+      (arm8_stepLib.arm8_step o Option.valOf o arm8_stepLib.arm8_pattern) r
+
+
+val v = bitstringSyntax.bitstring_of_hexstring "fd0007e0"
+val SOME r = arm8_stepLib.arm8_instruction v
+val SOME t = arm8_stepLib.arm8_pattern r
+
+  val x = (Option.valOf o arm8_stepLib.arm8_pattern) s
+  val y = arm8_stepLib.arm8_step t
+
+val s = "fd0007e0"
+val opc = string_to_opcode s
 arm8_spec_hex s
+
+val s = arm8_stepLib.arm8_names |> butlast |> butlast |> butlast |> butlast |> last
+val s = arm8_stepLib.arm8_names |> butlast |> last
+
+arm8_pattern "fd0007e0"
+
+   val arm8_names = List.map fst ps2
+   fun arm8_pattern s = Redblackmap.peek (d, utilsLib.lowercase s)
+   fun arm8_instruction tm =
+
+
 
 open arm8_progLib
 

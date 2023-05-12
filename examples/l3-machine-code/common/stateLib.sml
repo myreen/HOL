@@ -887,6 +887,9 @@ in
             temporal_stateSyntax.mk_spec_or_temporal_next model_tm
          val write = (progSyntax.list_mk_star ## progSyntax.list_mk_star) o
                      sort_finish psort o write_fn
+(*
+  val thm = hd thms
+*)
       in
          fn thm: thm =>
             let

@@ -9,6 +9,10 @@ open HolKernel boolLib bossLib
 open arm8Theory arm8_stepTheory arm8AssemblerLib
 open blastLib
 
+(*
+max_print_depth := 0
+*)
+
 structure Parse =
 struct
    open Parse
@@ -698,7 +702,7 @@ val ps = (List.concat o List.map decode_rwt)
    ("FloatingPointMulAdd",            "FFFTTTTT__F_____F_______________"),
    ("FloatingPointDiv",               "FFFTTTTF__T_____FFFTTF__________"),
    ("FloatingPointCompare",           "FFFTTTTF__T_____FFTFFF__________"),
-   ("LoadStoreRegisterFloatingPoint", "TTTTTTFT________________________"),
+   ("LoadStoreRegisterFloatingPoint", "..TTTTFT_.______________________"),
    ("FloatingPointMov",               "_FFTTTTF__TF_TT_FFFFFF__________"),
    ("FloatingPointMovImm",            "FFFTTTTF__T________TFFFFFFF_____"),
    ("NoOperation",                    "TTFTFTFTFFFFFFTTFFTFFFFFFFFTTTTT")
@@ -718,7 +722,6 @@ in
        | _ => NONE
 end
 (*
-val s = "LoadStoreRegisterFloatingPoint"
 val v = bitstringSyntax.bitstring_of_hexstring "fd0007e0"
 val SOME r = arm8_instruction v
 val SOME t = arm8_pattern r
@@ -879,6 +882,32 @@ end
 val arm8_step_code = List.map arm8_step_hex o arm8AssemblerLib.arm8_code
 
 (* Testing...
+
+val s = "fd0007e0"
+val v = bitstringSyntax.bitstring_of_hexstring s
+val SOME r = arm8_instruction v
+val SOME v = arm8_pattern r
+val res = arm8_step v
+
+val v = (Option.valOf o arm8_pattern) r
+val y = arm8_step v
+
+arm8_step_hex s
+
+max_print_depth := 4000
+
+val s = "fd0007e0"; arm8_pattern s
+
+val s = "fd0007e0"; val th = arm8_stepLib.arm8_step_hex s |> hd
+
+th
+  |> DISCH “s.PC = 8w”
+  |> DISCH “s.SP_EL0 = 800w”
+  |> DISCH “s.FPREG 0w = 8000w”
+  |> SIMP_RULE bool_ss []
+  |> UNDISCH_ALL
+  |> CONV_RULE (RAND_CONV EVAL)
+
 
 open arm8_stepLib
 
