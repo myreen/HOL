@@ -697,14 +697,14 @@ val ps = (List.concat o List.map decode_rwt)
    ("StorePair32",                    "FFTFTFF_.F______________________"),
    ("LoadPair32",                     "F_TFTFF_.T______________________"),
    ("LoadStorePair64",                "TFTFTFF_..______________________"),
-   ("FloatingPointAddSub",            "FFFTTTTF__T_____FFT_TF__________"),
+   ("FloatingPointAddSub",            "FFFTTTTFFTT_____FFT.TF__________"),
    ("FloatingPointMul",               "FFFTTTTFFTT_____FFFFTF__________"),
-   ("FloatingPointMulAdd",            "FFFTTTTT__F_____F_______________"),
-   ("FloatingPointDiv",               "FFFTTTTF__T_____FFFTTF__________"),
-   ("FloatingPointCompare",           "FFFTTTTF__T_____FFTFFF__________"),
+   ("FloatingPointMulAdd",            "FFFTTTTTFTF_____F_______________"),
+   ("FloatingPointDiv",               "FFFTTTTFFTT_____FFFTTF__________"),
+   ("FloatingPointCompare",           "FFFTTTTFFTT_____FFTFFF_____T.FFF"),
    ("LoadStoreRegisterFloatingPoint", "..TTTTFT_.______________________"),
-   ("FloatingPointMov",               "_FFTTTTF__TF_TT_FFFFFF__________"),
-   ("FloatingPointMovImm",            "FFFTTTTF__T________TFFFFFFF_____"),
+   ("FloatingPointMov",               "TFFTTTTFFTTF_TT.FFFFFF__________"),
+   ("FloatingPointMovImm",            "FFFTTTTFFTT________TFFFFFFF_____"),
    ("NoOperation",                    "TTFTFTFTFFFFFFTTFFTFFFFFFFFTTTTT")
   ]
 
@@ -723,6 +723,9 @@ in
 end
 (*
 val v = bitstringSyntax.bitstring_of_hexstring "fd0007e0"
+val SOME r = arm8_instruction v
+val SOME t = arm8_pattern r
+val v = bitstringSyntax.bitstring_of_hexstring "1e602030"
 val SOME r = arm8_instruction v
 val SOME t = arm8_pattern r
 *)
@@ -883,11 +886,16 @@ val arm8_step_code = List.map arm8_step_hex o arm8AssemblerLib.arm8_code
 
 (* Testing...
 
-val s = "fd0007e0"
-val v = bitstringSyntax.bitstring_of_hexstring s
-val SOME r = arm8_instruction v
-val SOME v = arm8_pattern r
-val res = arm8_step v
+
+(*
+open arm8_stepLib
+*)
+
+val s = "1e612800";
+val v = bitstringSyntax.bitstring_of_hexstring s;
+val SOME r = arm8_instruction v;
+val SOME v = arm8_pattern r;
+val res = arm8_step v;
 
 val v = (Option.valOf o arm8_pattern) r
 val y = arm8_step v
@@ -925,7 +933,7 @@ val float_add = th
   |> UNDISCH_ALL
   |> CONV_RULE (REWRITE_CONV [FPAdd64_def,RoundingMode_def] THENC RAND_CONV EVAL)
 
-open arm8_stepLib
+
 
 fun arm8_step_hex' s =
   let
@@ -937,32 +945,32 @@ fun arm8_step_hex' s =
 
 (* TODO: make sure it works with arm8_step_hex' instead of arm8_step_hex *)
 
-val s = "1e610800"; arm8_step_hex s (* fmul	d0, d0, d1 *);
-val s = "1f410800"; arm8_step_hex s (* fmadd    d0, d0, d1, d2 *);
-val s = "1e651001"; arm8_step_hex s (* fmov	d1, #1.200000000000000000e+01 *);
-val s = "1e612800"; arm8_step_hex s (* fadd	d0, d0, d1 *);
-val s = "1e611800"; arm8_step_hex s (* fdiv	d0, d0, d1 *);
-val s = "1e613800"; arm8_step_hex s (* fsub	d0, d0, d1 *);
-val s = "fd0007e0"; arm8_step_hex s (* str	d0, [sp, #8] *);
-val s = "fd0003e1"; arm8_step_hex s (* str	d1, [sp] *);
-val s = "fd4007e1"; arm8_step_hex s (* ldr	d1, [sp, #8] *);
-val s = "fd4003e0"; arm8_step_hex s (* ldr	d0, [sp] *);
-val s = "1e602030"; arm8_step_hex s (* fcmpe	d1, d0 *);
-val s = "fd4007e1"; arm8_step_hex s (* ldr	d1, [sp, #8] *);
-val s = "fd4003e0"; arm8_step_hex s (* ldr	d0, [sp] *);
-val s = "1e603820"; arm8_step_hex s (* fsub	d0, d1, d0 *);
-val s = "fd0017e0"; arm8_step_hex s (* str	d0, [sp, #40] *);
-val s = "fd4017e0"; arm8_step_hex s (* ldr	d0, [sp, #40] *);
-val s = "9e670001"; arm8_step_hex s (* fmov	d1, x0; *)
-val s = "1e612800"; arm8_step_hex s (* fadd	d0, d0, d1 *);
-val s = "fd001be0"; arm8_step_hex s (* str	d0, [sp, #48] *);
-val s = "fd4017e0"; arm8_step_hex s (* ldr	d0, [sp, #40] *);
-val s = "fd0013e0"; arm8_step_hex s (* str	d0, [sp, #32] *);
-val s = "fd401be0"; arm8_step_hex s (* ldr	d0, [sp, #48] *);
-val s = "fd0013e0"; arm8_step_hex s (* str	d0, [sp, #32] *);
-val s = "fd4013e0"; arm8_step_hex s (* ldr	d0, [sp, #32] *);
-val s = "fd001fe0"; arm8_step_hex s (* str	d0, [sp, #56] *);
-val s = "fd401fe0"; arm8_step_hex s (* ldr	d0, [sp, #56] *);
+val s = "1e610800"; arm8_step_hex' s (* fmul	d0, d0, d1 *);
+val s = "1f410800"; arm8_step_hex' s (* fmadd    d0, d0, d1, d2 *);
+val s = "1e651001"; arm8_step_hex' s (* fmov	d1, #1.200000000000000000e+01 *);
+val s = "1e612800"; arm8_step_hex' s (* fadd	d0, d0, d1 *);
+val s = "1e611800"; arm8_step_hex' s (* fdiv	d0, d0, d1 *);
+val s = "1e613800"; arm8_step_hex' s (* fsub	d0, d0, d1 *);
+val s = "fd0007e0"; arm8_step_hex' s (* str	d0, [sp, #8] *);
+val s = "fd0003e1"; arm8_step_hex' s (* str	d1, [sp] *);
+val s = "fd4007e1"; arm8_step_hex' s (* ldr	d1, [sp, #8] *);
+val s = "fd4003e0"; arm8_step_hex' s (* ldr	d0, [sp] *);
+val s = "1e602030"; arm8_step_hex' s (* fcmpe	d1, d0 *);
+val s = "fd4007e1"; arm8_step_hex' s (* ldr	d1, [sp, #8] *);
+val s = "fd4003e0"; arm8_step_hex' s (* ldr	d0, [sp] *);
+val s = "1e603820"; arm8_step_hex' s (* fsub	d0, d1, d0 *);
+val s = "fd0017e0"; arm8_step_hex' s (* str	d0, [sp, #40] *);
+val s = "fd4017e0"; arm8_step_hex' s (* ldr	d0, [sp, #40] *);
+val s = "9e670001"; arm8_step_hex' s (* fmov	d1, x0 *);
+val s = "1e612800"; arm8_step_hex' s (* fadd	d0, d0, d1 *);
+val s = "fd001be0"; arm8_step_hex' s (* str	d0, [sp, #48] *);
+val s = "fd4017e0"; arm8_step_hex' s (* ldr	d0, [sp, #40] *);
+val s = "fd0013e0"; arm8_step_hex' s (* str	d0, [sp, #32] *);
+val s = "fd401be0"; arm8_step_hex' s (* ldr	d0, [sp, #48] *);
+val s = "fd0013e0"; arm8_step_hex' s (* str	d0, [sp, #32] *);
+val s = "fd4013e0"; arm8_step_hex' s (* ldr	d0, [sp, #32] *);
+val s = "fd001fe0"; arm8_step_hex' s (* str	d0, [sp, #56] *);
+val s = "fd401fe0"; arm8_step_hex' s (* ldr	d0, [sp, #56] *);
 
 val v = bitstringSyntax.bitstring_of_hexstring s;
 

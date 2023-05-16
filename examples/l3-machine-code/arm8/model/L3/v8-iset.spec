@@ -1966,8 +1966,8 @@ instruction Decode (w::word) =
       ------------------------
       -- FloatingPointCompare
       ------------------------
-      case '00011110 ftype 1 Rm 001000 Rn opc `2 000' =>
-         Data(FloatingPointCompare (ftype, opc, Rm, Rn))
+      case '00011110 ftype 1 Rm 001000 Rn 1 opc0 `1 000' =>
+         Data(FloatingPointCompare (ftype, opc0, Rm, Rn))
 
       ------------------------
       -- LoadStoreRegisterFloatingPoint

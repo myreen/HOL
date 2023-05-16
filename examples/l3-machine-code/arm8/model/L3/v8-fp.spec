@@ -192,12 +192,12 @@ define Data > FloatingPointDiv(
 ------------------------
 
 define Data > FloatingPointCompare(
-  ftype :: bits(2), opc :: bits(2), m :: reg, n :: reg) =
+  ftype :: bits(2), opc0 :: bits(1), m :: reg, n :: reg) =
 {
    match (ftype)
    {
       case '01' =>
-         match (opc<0:0>)
+         match (opc0)
             {
                case '0' =>
                   SetTheFlags(true, FPCompare64(D(n), D(m)))
