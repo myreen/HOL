@@ -906,24 +906,32 @@ max_print_depth := 4000
 
 val s = "fd0007e0"; arm8_pattern s
 
-val s = "fd0007e0"; val th = arm8_step_hex s |> hd
+val s = "fd0007e0"; val th = arm8_step_hex s |> hd (* str	d0, [sp, #8] *);
+
+(*
+set_trace "PP.avoid_unicode" 1;
+*)
 
 val store = th
   |> DISCH “s.PC = 8w”
   |> DISCH “s.SP_EL0 = 800w”
-  |> DISCH “s.FPREG 0w = 8000w”
+  |> DISCH “s.FPREG 0w = 256w”
   |> DISCH “s.FPCR.RMode = 0w”
   |> SIMP_RULE bool_ss []
   |> UNDISCH_ALL
   |> CONV_RULE (RAND_CONV EVAL)
 
-val s = "1e612800"; val th = arm8_step_hex s (* fadd	d0, d0, d1 *) |> hd
+val s = "1e612800"; val th = arm8_step_hex s |> hd (* fadd	d0, d0, d1 *);
+
+open arm8Theory;
+open binary_ieeeTheory;
+open machine_ieeeTheory;
 
 val float_add = th
   |> DISCH “s.PC = 8w”
   |> DISCH “s.SP_EL0 = 800w”
-  |> DISCH “s.FPREG 0w = 8000w”
-  |> DISCH “s.FPREG 1w = 8100w”
+  |> DISCH “s.FPREG 0w = 13846317054350589952w”
+  |> DISCH “s.FPREG 1w = 13835058055282163712w”
   |> DISCH “s.FPCR.RMode = 0w”
   |> SIMP_RULE bool_ss []
   |> UNDISCH_ALL
@@ -931,7 +939,7 @@ val float_add = th
   |> DISCH “s.FPCR.RMode = 0w”
   |> SIMP_RULE bool_ss []
   |> UNDISCH_ALL
-  |> CONV_RULE (REWRITE_CONV [FPAdd64_def,RoundingMode_def] THENC RAND_CONV EVAL)
+  |> CONV_RULE (REWRITE_CONV [FPAdd64_def,RoundingMode_def, float_add_def, float_to_fp64_def, float_value_def, float_to_real_def, float_round_with_flags_def, float_round_def] THENC RAND_CONV EVAL)
 
 
 
