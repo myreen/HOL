@@ -34,6 +34,7 @@ val (_, _, dest_arm8_instr, _) = arm_1 "arm8_instr"
 val (_, mk_arm8_PC, dest_arm8_PC, is_arm8_PC) = arm_1 "arm8_PC"
 val (_, _, dest_arm8_MEM, is_arm8_MEM) = arm_2 "arm8_MEM"
 val (_, mk_arm8_REG, dest_arm8_REG, is_arm8_REG) = arm_2 "arm8_REG"
+val (_, mk_arm8_FPREG, dest_arm8_FPREG, is_arm8_FPREG) = arm_2 "arm8_FPREG"
 
 (* -- *)
 
@@ -58,13 +59,20 @@ val state_id =
        ["MEM", "PC", "REG", "branch_hint"],
        ["MEM", "PC", "branch_hint"],
        ["REG", "SP_EL0", "branch_hint"],
-       ["REG", "branch_hint"]
+       ["REG", "branch_hint"],
+       ["PSTATE", "REG", "FPREG", "branch_hint"],
+       ["PSTATE", "FPREG", "branch_hint"],
+       ["MEM", "PC", "SP_EL0", "FPREG", "branch_hint"],
+       ["MEM", "PC", "REG", "FPREG", "branch_hint"],
+       ["MEM", "PC", "FPREG", "branch_hint"],
+       ["REG", "SP_EL0", "FPREG", "branch_hint"],
+       ["REG", "FPREG", "branch_hint"]
       ]
 
 val arm_frame =
    stateLib.update_frame_state_thm arm_proj_def
-      ["PSTATE.N", "PSTATE.Z", "PSTATE.C", "PSTATE.V", "SP_EL0", "PC", "REG",
-       "MEM"]
+      ["PSTATE.N", "PSTATE.Z", "PSTATE.C", "PSTATE.V",
+       "SP_EL0", "PC", "REG", "FPREG", "MEM"]
 
 val arm_frame_hidden =
    stateLib.update_hidden_frame_state_thm arm_proj_def
@@ -202,6 +210,7 @@ local
        | (NONE, SOME _) => General.LESS
        | (NONE, NONE) => Term.compare (w1, w2)
    val register = fst o dest_arm8_REG
+   val fp_register = fst o dest_arm8_FPREG
    val address = HolKernel.strip_binop wordsSyntax.dest_word_add o
                  fst o dest_arm8_MEM
 in
@@ -209,9 +218,11 @@ in
       let
          val (m, rst) = List.partition is_arm8_MEM p
          val (r, rst) = List.partition is_arm8_REG rst
+         val (f, rst) = List.partition is_arm8_FPREG rst
       in
          mlibUseful.sort_map other_index Int.compare rst @
          mlibUseful.sort_map register Term.compare r @
+         mlibUseful.sort_map fp_register Term.compare f @
          mlibUseful.sort_map address (mlibUseful.lex_list_order word_compare) m
       end
 end
@@ -234,7 +245,8 @@ in
    val arm_write_footprint =
       stateLib.write_footprint arm_1 arm_2
         [(fupnm "arm8_state" "MEM", "arm8_MEM", ``^st.MEM``),
-         (fupnm "arm8_state" "REG", "arm8_REG", ``^st.REG``)]
+         (fupnm "arm8_state" "REG", "arm8_REG", ``^st.REG``),
+         (fupnm "arm8_state" "FPREG", "arm8_FPREG", ``^st.FPREG``)]
         [(fupnm "arm8_state" "SP_EL0",  "arm8_SP_EL0")]
         [(fupnm "arm8_state" "PC",  "arm8_PC")]
         [
@@ -716,7 +728,11 @@ end
 
 (* Testing...
 
+arm8_spec_hex "fd0007e0"
+
+val v = bitstringSyntax.bitstring_of_hexstring "fd0007e0"
 val SOME s = arm8_stepLib.arm8_instruction v
+
 
 max_print_depth := 0
 max_print_depth := 0-1
