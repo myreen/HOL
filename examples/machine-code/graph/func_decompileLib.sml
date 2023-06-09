@@ -258,6 +258,13 @@ fun prove_funcs_ok names = let
 
 (*
 
+  val base_name = "armv8_example/s"
+  val _ = read_files base_name []
+  val _ = open_current "test"
+  val sec_name = "m"
+  val _ = func_decompile print_title sec_name
+  val th = prove_funcs_ok [sec_name]
+
   val base_name = "example-arm8/SysModel"
   val _ = read_files base_name []
   val _ = open_current "test"
