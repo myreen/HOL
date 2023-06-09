@@ -926,6 +926,8 @@ val s = "1e612800"; val th = arm8_step_hex s |> hd (* fadd	d0, d0, d1 *);
 open arm8Theory;
 open binary_ieeeTheory;
 open machine_ieeeTheory;
+load "binary_ieeeLib";
+open binary_ieeeLib;
 
 val float_add = th
   |> DISCH “s.PC = 8w”
@@ -939,7 +941,7 @@ val float_add = th
   |> DISCH “s.FPCR.RMode = 0w”
   |> SIMP_RULE bool_ss []
   |> UNDISCH_ALL
-  |> CONV_RULE (REWRITE_CONV [FPAdd64_def,RoundingMode_def, float_add_def, float_to_fp64_def, float_value_def, float_to_real_def, float_round_with_flags_def, float_round_def] THENC RAND_CONV EVAL)
+  |> CONV_RULE (REWRITE_CONV [FPAdd64_def,RoundingMode_def] THENC RAND_CONV EVAL THENC REWRITE_CONV [float_to_fp64_def] THENC RAND_CONV EVAL)
 
 
 
