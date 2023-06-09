@@ -573,6 +573,7 @@ fun derive_insts_for sec_name = let
 (*
 
   val base_name = "example-arm8/SysModel"
+  val base_name = "armv8_example/s"
   val _ = read_files base_name []
   val _ = open_current "test"
   val sec_name = "after"
@@ -581,7 +582,8 @@ fun derive_insts_for sec_name = let
   val sec_name = "DECRYPT"
   val sec_name = "RECVR"
   val sec_name = "DLR"
-  val _ = derive_insts_for sec_name
+  val sec_name = "m"
+  val thms = derive_insts_for sec_name
 
   val base_name = "loop-riscv/example"
   val base_name = "seL4-kernel/riscv/kernel-riscv"

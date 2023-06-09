@@ -407,4 +407,26 @@ val disjoint_arm_instr_thms = Theory.save_thm("disjoint_arm_instr_thms",
 
 (* ------------------------------------------------------------------------ *)
 
+Definition rounding_mode_def:
+  rounding_mode (w:2 word) =
+    case w of
+      0w => roundTiesToEven
+    | 1w => roundTowardPositive
+    | 2w => roundTowardNegative
+    | 3w => roundTowardZero
+    | v => ARB
+End
+
+Theorem FP_rewrites:
+  (FPAdd64 (x,y) s = fp64_add (rounding_mode s.FPCR.RMode) x y) ∧
+  (FPSub64 (x,y) s = fp64_sub (rounding_mode s.FPCR.RMode) x y) ∧
+  (FPMul64 (x,y) s = fp64_mul (rounding_mode s.FPCR.RMode) x y) ∧
+  (FPDiv64 (x,y) s = fp64_div (rounding_mode s.FPCR.RMode) x y) ∧
+  ((s with branch_hint := h).FPCR = s.FPCR)
+Proof
+  fs [rounding_mode_def,arm8Theory.RoundingMode_def,
+      arm8Theory.FPAdd64_def,arm8Theory.FPSub64_def,
+      arm8Theory.FPMul64_def,arm8Theory.FPDiv64_def]
+QED
+
 val () = export_theory()

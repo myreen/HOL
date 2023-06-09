@@ -257,6 +257,10 @@ val arm8_PSTATE_NZCV_def = Define `
     arm8_PSTATE_C (var_bool "c" s) *
     arm8_PSTATE_V (var_bool "v" s)`;
 
+val arm8_FP_ROUNDING_MODE_def = Define ‘
+  arm8_FP_ROUNDING_MODE (w:word64) =
+    SEP_EXISTS fpcr. arm8_FPCR fpcr * cond (fpcr.RMode = w2w w)’;
+
 val arm8_STATE_REGS_def = Define `
   arm8_STATE_REGS s =
     arm8_REG  0w (var_word  "r0" s) *
@@ -291,7 +295,12 @@ val arm8_STATE_REGS_def = Define `
     arm8_REG 29w (var_word "r29" s) *
     arm8_REG 30w (var_word "r30" s) *
     arm8_REG 31w (var_word "r31" s) *
-    arm8_SP_EL0 (var_word "sp" s)`;
+    arm8_SP_EL0 (var_word "sp" s) *
+    arm8_FPREG  0w (var_word  "d0" s) *
+    arm8_FPREG  1w (var_word  "d1" s) *
+    arm8_FPREG  2w (var_word  "d2" s) *
+    arm8_FPREG  3w (var_word  "d3" s) *
+    arm8_FP_ROUNDING_MODE (var_word  "fp_rounding" s)`;
 
 val arm8_STACK_MEMORY_def = Define `
   arm8_STACK_MEMORY = arm8_MEMORY`;
@@ -428,10 +437,11 @@ val var_update_thm = store_thm("var_update_thm",
 val all_names_def = Define `
   all_names =
     ["r0"; "r1"; "r2"; "r3"; "r4"; "r5"; "r6"; "r7"; "r8"; "r9";
-     "r10"; "r11"; "r12"; "r13"; "r14"; "r15"; "r16"; "r17"; "r18"; "r19";
-     "r20"; "r21"; "r22"; "r23"; "r24"; "r25"; "r26"; "r27"; "r28"; "r29";
-     "r30"; "r31"; "sp"; "mode"; "n"; "z"; "c"; "v";
-     "mem"; "dom"; "stack"; "dom_stack"; "clock"]`;
+     "r10"; "r11"; "r12"; "r13"; "r14"; "r15"; "r16"; "r17"; "r18";
+     "r19"; "r20"; "r21"; "r22"; "r23"; "r24"; "r25"; "r26"; "r27";
+     "r28"; "r29"; "r30"; "r31"; "d0"; "d1"; "d2"; "d3";
+     "fp_rounding"; "sp"; "mode"; "n"; "z"; "c"; "v"; "mem"; "dom";
+     "stack"; "dom_stack"; "clock"]`;
 
 val ret_and_all_names_def = Define `
   ret_and_all_names = "ret"::all_names ++ ["ret_addr_input"]`;
@@ -2252,6 +2262,11 @@ val SKIP_TAG_IMP_CALL_ARM = store_thm("SKIP_TAG_IMP_CALL_ARM",
             ("r29",var_acc "r29");
             ("r30",var_acc "r30");
             ("r31",var_acc "r31");
+            ("d0",var_acc "d0");
+            ("d1",var_acc "d1");
+            ("d2",var_acc "d2");
+            ("d3",var_acc "d3");
+            ("fp_rounding",var_acc "fp_rounding");
             ("sp",var_acc "sp");
             ("mode",var_acc "mode"); ("n",var_acc "n");
             ("z",var_acc "z"); ("c",var_acc "c"); ("v",var_acc "v");
@@ -2319,6 +2334,11 @@ val SKIP_TAG_IMP_CALL_ARM8 = store_thm("SKIP_TAG_IMP_CALL_ARM8",
             ("r29",var_acc "r29");
             ("r30",var_acc "r30");
             ("r31",var_acc "r31");
+            ("d0",var_acc "d0");
+            ("d1",var_acc "d1");
+            ("d2",var_acc "d2");
+            ("d3",var_acc "d3");
+            ("fp_rounding",var_acc "fp_rounding");
             ("sp",var_acc "sp");
             ("mode",var_acc "mode"); ("n",var_acc "n");
             ("z",var_acc "z"); ("c",var_acc "c"); ("v",var_acc "v");
@@ -2400,6 +2420,11 @@ val SKIP_TAG_IMP_CALL_M0 = store_thm("SKIP_TAG_IMP_CALL_M0",
             ("r29",var_acc "r29");
             ("r30",var_acc "r30");
             ("r31",var_acc "r31");
+            ("d0",var_acc "d0");
+            ("d1",var_acc "d1");
+            ("d2",var_acc "d2");
+            ("d3",var_acc "d3");
+            ("fp_rounding",var_acc "fp_rounding");
             ("sp",var_acc "sp");
             ("mode",var_acc "mode"); ("n",var_acc "n");
             ("z",var_acc "z"); ("c",var_acc "c"); ("v",var_acc "v");
@@ -2467,6 +2492,11 @@ val SKIP_TAG_IMP_CALL_RISCV = store_thm("SKIP_TAG_IMP_CALL_RISCV",
             ("r29",var_acc "r29");
             ("r30",var_acc "r30");
             ("r31",var_acc "r31");
+            ("d0",var_acc "d0");
+            ("d1",var_acc "d1");
+            ("d2",var_acc "d2");
+            ("d3",var_acc "d3");
+            ("fp_rounding",var_acc "fp_rounding");
             ("sp",var_acc "sp");
             ("mode",var_acc "mode"); ("n",var_acc "n");
             ("z",var_acc "z"); ("c",var_acc "c"); ("v",var_acc "v");

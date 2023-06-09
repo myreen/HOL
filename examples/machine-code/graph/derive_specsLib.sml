@@ -759,8 +759,8 @@ fun derive_specs_for sec_name = let
 (*
 
   model ........ up to date?
-  step ......... yet to be updated
-  prog ......... yet to be updated
+  step ......... fails for fcmpe (1e602030)
+  prog ......... could deal with FP rounding mode better
   decompiler ... yet to be updated
 
   val base_name = "kernel-riscv/kernel-riscv"

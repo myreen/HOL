@@ -408,11 +408,11 @@ val float_lemma = prove(
 val FloatingPointCompare_rwt =
    let val thms_cmp_reg =
       EV [dfn'FloatingPointCompare_def] [] []
-        ``dfn'FloatingPointCompare (v2w[F; T],v2w[T;F],m,n)``
+        ``dfn'FloatingPointCompare (v2w[F; T],v2w[F],m,n)``
       |> map (SIMP_RULE std_ss [float_lemma,write'D_def,mem_dword_def,D_def]);
       val thms_cmp_0 =
       EV [dfn'FloatingPointCompare_def] [] []
-        ``dfn'FloatingPointCompare (v2w[F; T],v2w[T;T],m,n)``
+        ``dfn'FloatingPointCompare (v2w[F; T],v2w[T],m,n)``
       |> map (SIMP_RULE std_ss [float_lemma,write'D_def,mem_dword_def,D_def]);
    in thms_cmp_reg @ thms_cmp_0 end;
 

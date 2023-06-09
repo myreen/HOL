@@ -66,7 +66,8 @@ val state_id =
        ["MEM", "PC", "REG", "FPREG", "branch_hint"],
        ["MEM", "PC", "FPREG", "branch_hint"],
        ["REG", "SP_EL0", "FPREG", "branch_hint"],
-       ["REG", "FPREG", "branch_hint"]
+       ["REG", "FPREG", "branch_hint"],
+       ["FPREG", "PC", "branch_hint"]
       ]
 
 val arm_frame =
@@ -281,6 +282,7 @@ end
 
 local
    val dest_reg = dest_arm8_REG
+   val dest_fpreg = dest_arm8_FPREG
    val width_reg = 5
    val proj_reg = NONE
    val reg_conv = REG_CONV
@@ -289,9 +291,12 @@ local
    fun asm_rule (tm: term) = (raise ERR "" "") : thm
    val model_tm = ``ARM8_MODEL``
 in
-   val combinations =
+   fun combinations x = (* fix me *)
       stateLib.register_combinations
-         (dest_reg, width_reg, proj_reg, reg_conv, ok_conv, asm_rule, model_tm)
+         (dest_reg, width_reg, proj_reg, reg_conv, ok_conv, asm_rule, model_tm) x
+      @
+      stateLib.register_combinations
+         (dest_fpreg, width_reg, proj_reg, reg_conv, ok_conv, asm_rule, model_tm) x
 end
 
 (* ------------------------------------------------------------------------ *)
@@ -303,7 +308,10 @@ local
           | "arm8_prog$arm8_PSTATE_Z" => K "z"
           | "arm8_prog$arm8_PSTATE_C" => K "c"
           | "arm8_prog$arm8_PSTATE_V" => K "v"
+          | "arm8_prog$arm8_FPCR" => K "fpcr"
           | "arm8_prog$arm8_SP_EL0" => K "sp"
+          | "arm8_prog$arm8_FPREG" =>
+              Lib.curry (op ^) "d" o Int.toString o reg_index o List.hd
           | "arm8_prog$arm8_REG" =>
               Lib.curry (op ^) "r" o Int.toString o reg_index o List.hd
           | "arm8_prog$arm8_MEM" => K "b"
@@ -432,8 +440,9 @@ local
       let
          val p = progSyntax.strip_star (temporal_stateSyntax.dest_pre' tm)
          val rp = List.mapPartial (Lib.total (fst o dest_arm8_REG)) p
+         val fp = List.mapPartial (Lib.total (fst o dest_arm8_FPREG)) p
       in
-         if tdistinct rp
+         if tdistinct rp andalso tdistinct fp
             then Conv.ALL_CONV tm
          else raise ERR "check_unique_reg_CONV" "duplicate register"
       end
@@ -616,7 +625,8 @@ local
          (PURE_REWRITE_RULE
             [arm8_stepTheory.mem_half_def,
              arm8_stepTheory.mem_word_def,
-             arm8_stepTheory.mem_dword_def]) o
+             arm8_stepTheory.mem_dword_def,
+             FP_rewrites]) o
       arm8_stepLib.arm8_step o Option.valOf o arm8_stepLib.arm8_pattern
    fun thm_eq thm1 thm2 = Term.aconv (Thm.concl thm1) (Thm.concl thm2)
    val mk_thm_set = Lib.op_mk_set thm_eq
@@ -730,9 +740,39 @@ end
 
 arm8_spec_hex "fd0007e0"
 
-val v = bitstringSyntax.bitstring_of_hexstring "fd0007e0"
-val SOME s = arm8_stepLib.arm8_instruction v
+val s = "0b000020"; arm8_spec_hex s (* add r0, r0, r1 --- 32-bit *)
 
+val s = "fd0007e0"; arm8_spec_hex s (* str	d0, [sp, #8] *);
+val s = "fd0003e1"; arm8_spec_hex s (* str	d1, [sp] *);
+val s = "fd0017e0"; arm8_spec_hex s (* str	d0, [sp, #40] *);
+val s = "9e670001"; arm8_spec_hex s (* fmov	d1, x0 *);
+val s = "fd001be0"; arm8_spec_hex s (* str	d0, [sp, #48] *);
+val s = "fd0013e0"; arm8_spec_hex s (* str	d0, [sp, #32] *);
+val s = "fd0013e0"; arm8_spec_hex s (* str	d0, [sp, #32] *);
+val s = "fd001fe0"; arm8_spec_hex s (* str	d0, [sp, #56] *);
+val s = "1e651001"; arm8_spec_hex s (* fmov	d1, #1.200000000000000000e+01 *);
+val s = "fd4007e1"; arm8_spec_hex s (* ldr	d1, [sp, #8] *);
+val s = "fd4007e1"; arm8_spec_hex s (* ldr	d1, [sp, #8] *);
+val s = "fd4003e0"; arm8_spec_hex s (* ldr	d0, [sp] *);
+val s = "fd4003e0"; arm8_spec_hex s (* ldr	d0, [sp] *);
+val s = "fd4017e0"; arm8_spec_hex s (* ldr	d0, [sp, #40] *);
+val s = "fd4017e0"; arm8_spec_hex s (* ldr	d0, [sp, #40] *);
+val s = "fd401be0"; arm8_spec_hex s (* ldr	d0, [sp, #48] *);
+val s = "fd4013e0"; arm8_spec_hex s (* ldr	d0, [sp, #32] *);
+val s = "fd401fe0"; arm8_spec_hex s (* ldr	d0, [sp, #56] *);
+val s = "1e610810"; arm8_spec_hex s (* fmul	d16, d0, d1 *);
+val s = "1f410800"; arm8_spec_hex s (* fmadd    d0, d0, d1, d2 *);
+val s = "1e612800"; arm8_spec_hex s (* fadd	d0, d0, d1 *);
+val s = "1e611800"; arm8_spec_hex s (* fdiv	d0, d0, d1 *);
+val s = "1e613800"; arm8_spec_hex s (* fsub	d0, d0, d1 *);
+val s = "1e603820"; arm8_spec_hex s (* fsub	d0, d1, d0 *);
+val s = "1e612800"; arm8_spec_hex s (* fadd	d0, d0, d1 *);
+
+val s = "1e602030"; arm8_spec_hex s (* fcmpe	d1, d0 *);
+
+val v = bitstringSyntax.bitstring_of_hexstring s
+val SOME s = arm8_stepLib.arm8_instruction v
+val thms = arm_step s
 
 max_print_depth := 0
 max_print_depth := 0-1
