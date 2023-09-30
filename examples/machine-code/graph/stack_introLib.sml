@@ -6,13 +6,22 @@ open helperLib backgroundLib file_readerLib writerLib;
 
 open GraphLangTheory
 
+val tm32 = arm_progTheory.arm_MEMORY_def |> SPEC_ALL |> concl |> dest_eq |> fst
+val m32 = mk_var("m", tm32 |> rand |> type_of)
+val d32 = mk_var("d", tm32 |> rator |> rand |> type_of)
+val tm64 = arm8_progTheory.arm8_MEMORY_def |> SPEC_ALL |> concl |> dest_eq |> fst
+val m64 = mk_var("m", tm64 |> rand |> type_of)
+val d64 = mk_var("d", tm64 |> rator |> rand |> type_of)
+
 fun STACK_MEMORY_INTRO_RULE th = let
   val (_,p,_,_) = th |> concl |> dest_spec
   val ps = list_dest dest_star p
-  val pat = case !arch_name of ARM   => ``arm_MEMORY d m``
-                             | ARM8  => ``arm8_MEMORY d m``
-                             | M0    => ``m0_MEMORY d m``
-                             | RISCV => ``riscv_MEMORY d m``
+  fun inst_32 def = def |> SPECL [d32,m32] |> concl |> dest_eq |> fst
+  fun inst_64 def = def |> SPECL [d64,m64] |> concl |> dest_eq |> fst
+  val pat = case !arch_name of ARM   => inst_32 arm_progTheory.arm_MEMORY_def
+                             | ARM8  => inst_64 arm8_progTheory.arm8_MEMORY_def
+                             | M0    => inst_32 m0_progTheory.m0_MEMORY_def
+                             | RISCV => inst_64 riscv_progTheory.riscv_MEMORY_def
   val x = first (can (match_term pat)) ps
   val d = x |> rator |> rand
   val m = x |> rand

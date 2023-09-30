@@ -18,10 +18,16 @@ fun stack_offset_in_fst_arg sec_name = let
   val (_,ret_word_count,_) = section_io sec_name
   in arch_max_return_words () < ret_word_count end
 
+fun inst_with_str xs th = let
+  fun inst_one (s,th) = let
+    val v = th |> concl |> dest_forall |> fst
+    in SPEC (mk_var(s,type_of v)) th end
+  in foldr inst_one th xs end
+
 local
   val bool_arb = mk_arb(``:bool``)
   val mem_type = ``:word32->word8``
-  val write32_pat = ``WRITE32 a w m``
+  val write32_pat = WRITE32_def |> inst_with_str ["a","w","m"] |> concl |> dest_eq |> fst
   fun dest_write32 tm =
     if can (match_term write32_pat) tm then
       let val (xyz,q) = dest_comb tm
@@ -187,8 +193,8 @@ fun find_stack_accesses_for all_summaries sec_name = let
       in (aconv w1 sp_var andalso wordsSyntax.is_n2w w2) orelse
          (aconv w2 sp_var andalso wordsSyntax.is_n2w w1) end
     handle HOL_ERR _ => false
-  val stack_read32_pat = ``READ32 (a:word32) m``
-  val stack_read64_pat = ``READ64 (a:word64) m``
+  val stack_read32_pat = inst_with_str ["a","m"] READ32_def |> concl |> dest_eq |> fst
+  val stack_read64_pat = inst_with_str ["a","m"] READ64_def |> concl |> dest_eq |> fst
   fun is_simple_or_stack_read32 (x,y) =
     if is_var x then true else
     if can (match_term stack_read32_pat) x then
@@ -223,8 +229,10 @@ fun find_stack_accesses_for all_summaries sec_name = let
     val _ = map (fn (x,y) => print ("  " ^ term_to_string x ^ " is " ^
                                            term_to_string y ^ "\n")) s
     in () end
-  val read_word_pat = (if !arch_name = RISCV then ``READ64 a (m:word64->word8)``
-                                             else ``READ32 a (m:word32->word8)``)
+  val read32_pat = inst_with_str ["a","m"] READ32_def |> concl |> dest_eq |> fst
+  val read64_pat = inst_with_str ["a","m"] READ64_def |> concl |> dest_eq |> fst
+  val read_word_pat = (if !arch_name = RISCV then read64_pat
+                                             else read32_pat)
   fun remove_read_word tm = let
     val xs = find_terms (can (match_term read_word_pat)) tm
     val ss = map (fn x => x |-> (mk_arb(type_of x))) xs

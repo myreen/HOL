@@ -194,6 +194,14 @@ val patterns =
       (``(sw2sw (x:'a word)):'b word``,"WordCastSigned"),
       (``(n:num) + m``,"Plus"),
       (``if b then x else y : 'a``,"IfThenElse"),
+      (``fp64_add_with_rounding r d1 d2``,"FP_Add"),
+      (``fp64_sub_with_rounding r d1 d2``,"FP_Sub"),
+      (``fp64_mul_with_rounding r d1 d2``,"FP_Mul"),
+      (``fp64_div_with_rounding r d1 d2``,"FP_Div"),
+      (``fp64_cmp_n d1 d2``,"FP_Cmp_N"),
+      (``fp64_cmp_z d1 d2``,"FP_Cmp_Z"),
+      (``fp64_cmp_c d1 d2``,"FP_Cmp_C"),
+      (``fp64_cmp_v d1 d2``,"FP_Cmp_V"),
       (``word_reverse (x:'a word)``,"WordReverse"),
       (``count_leading_zero_bits (w:'a word)``,"CountLeadingZeroes")];
 

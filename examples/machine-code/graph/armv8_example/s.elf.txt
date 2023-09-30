@@ -1,0 +1,53 @@
+
+s.o:     file format elf64-littleaarch64
+
+
+Disassembly of section .text:
+
+0000000000000000 <f>:
+   0:	1e610800 	fmul	d0, d0, d1
+   4:	d65f03c0 	ret
+
+0000000000000008 <g>:
+   8:	1f410800 	fmadd	d0, d0, d1, d2
+   c:	d65f03c0 	ret
+
+0000000000000010 <h>:
+  10:	1e651001 	fmov	d1, #1.200000000000000000e+01
+  14:	1e612800 	fadd	d0, d0, d1
+  18:	d65f03c0 	ret
+
+000000000000001c <i>:
+  1c:	1e611800 	fdiv	d0, d0, d1
+  20:	d65f03c0 	ret
+
+0000000000000024 <j>:
+  24:	1e612800 	fadd	d0, d0, d1
+  28:	d65f03c0 	ret
+
+000000000000002c <k>:
+  2c:	1e613800 	fsub	d0, d0, d1
+  30:	d65f03c0 	ret
+
+0000000000000034 <m>:
+  34:	fd0007e0 	str	d0, [sp, #8]
+  38:	fd0003e1 	str	d1, [sp]
+  3c:	fd4007e1 	ldr	d1, [sp, #8]
+  40:	fd4003e0 	ldr	d0, [sp]
+  44:	1e602030 	fcmpe	d1, d0
+  48:	fd4007e1 	ldr	d1, [sp, #8]
+  4c:	fd4003e0 	ldr	d0, [sp]
+  50:	1e603820 	fsub	d0, d1, d0
+  54:	fd0017e0 	str	d0, [sp, #40]
+  58:	fd4017e0 	ldr	d0, [sp, #40]
+  5c:	9e670001 	fmov	d1, x0
+  60:	1e612800 	fadd	d0, d0, d1
+  64:	fd001be0 	str	d0, [sp, #48]
+  68:	fd4017e0 	ldr	d0, [sp, #40]
+  6c:	fd0013e0 	str	d0, [sp, #32]
+  70:	fd401be0 	ldr	d0, [sp, #48]
+  74:	fd0013e0 	str	d0, [sp, #32]
+  78:	fd4013e0 	ldr	d0, [sp, #32]
+  7c:	fd001fe0 	str	d0, [sp, #56]
+  80:	fd401fe0 	ldr	d0, [sp, #56]
+  84:	d65f03c0 	ret

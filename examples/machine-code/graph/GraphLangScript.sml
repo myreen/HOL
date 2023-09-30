@@ -2580,4 +2580,66 @@ val v2w_sing = store_thm("v2w_sing",
   ``v2w [x] = if x then 1w else 0w``,
   Cases_on `x` \\ EVAL_TAC);
 
+Theorem TO_arm8_FP_ROUNDING_MODE:
+  (∀fpcr. SPEC m (r * arm8_FPCR fpcr) c (q (fpcr.RMode) * arm8_FPCR fpcr)) ⇒
+  SPEC m (r * arm8_FP_ROUNDING_MODE fp_rounding) c
+         (q (w2w fp_rounding) * arm8_FP_ROUNDING_MODE fp_rounding)
+Proof
+  gvs [arm8_FP_ROUNDING_MODE_def,SEP_CLAUSES,GSYM SPEC_PRE_EXISTS]
+  \\ simp_tac (std_ss++helperLib.sep_cond_ss) [SPEC_MOVE_COND]
+  \\ rw [] \\ last_x_assum $ qspec_then ‘fpcr’ mp_tac
+  \\ strip_tac \\ drule SPEC_WEAKEN
+  \\ disch_then irule
+  \\ gvs [SEP_IMP_def,SEP_EXISTS_THM,cond_STAR] \\ rw []
+  \\ last_x_assum $ irule_at Any \\ fs []
+QED
+
+Definition fp64_add_with_rounding_def[nocompute]:
+  fp64_add_with_rounding (r:word64) (a:word64) (b:word64) =
+    fp64_add (rounding_mode (w2w r)) a b
+End
+
+Definition fp64_sub_with_rounding_def[nocompute]:
+  fp64_sub_with_rounding (r:word64) (a:word64) (b:word64) =
+    fp64_sub (rounding_mode (w2w r)) a b
+End
+
+Definition fp64_mul_with_rounding_def[nocompute]:
+  fp64_mul_with_rounding (r:word64) (a:word64) (b:word64) =
+    fp64_mul (rounding_mode (w2w r)) a b
+End
+
+Definition fp64_div_with_rounding_def[nocompute]:
+  fp64_div_with_rounding (r:word64) (a:word64) (b:word64) =
+    fp64_div (rounding_mode (w2w r)) a b
+End
+
+Definition fp64_cmp_n_def[nocompute]:
+  fp64_cmp_n a b = FST (FPCompare64 (a:word64,b:word64))
+End
+
+Definition fp64_cmp_z_def[nocompute]:
+  fp64_cmp_z a b = FST (SND (FPCompare64 (a:word64,b:word64)))
+End
+
+Definition fp64_cmp_c_def[nocompute]:
+  fp64_cmp_c a b = FST (SND (SND (FPCompare64 (a:word64,b:word64))))
+End
+
+Definition fp64_cmp_v_def[nocompute]:
+  fp64_cmp_v a b = SND (SND (SND (FPCompare64 (a:word64,b:word64))))
+End
+
+Triviality TO_fp64_cmp:
+  FPCompare64 (a,b) = (fp64_cmp_n a b,
+                       fp64_cmp_z a b,
+                       fp64_cmp_c a b,
+                       fp64_cmp_v a b)
+Proof
+  Cases_on ‘FPCompare64 (a,b)’ \\ fs []   \\ PairCases_on ‘r’
+  \\ fs [fp64_cmp_n_def,fp64_cmp_z_def,fp64_cmp_c_def,fp64_cmp_v_def]
+QED
+
+Theorem FINAL_CLEANUP = TO_fp64_cmp;
+
 val _ = export_theory();

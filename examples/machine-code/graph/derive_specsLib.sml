@@ -235,6 +235,13 @@ local
     |> SIMP_RULE std_ss [EVAL ``dimword (:64)``]
   val riscv_mask_byte =
     blastLib.BBLAST_PROVE ``w2w (w && 2w ≪ 7 − 1w) = (w2w (w:word64)) : word8``
+  val arm8_fp_imm_pat =
+    (arm8Theory.FPExpandImm8_def |> SPEC_ALL |> concl |> dest_eq |> fst,
+     arm8Theory.FPExpandImm8_def)
+  fun eval_matches_rule (pat,def) th = let
+    val tms = find_terms (can (match_term pat)) (concl th)
+    val rws = map (QCONV (REWRITE_CONV [def] THENC EVAL)) tms
+    in PURE_REWRITE_RULE rws th end
 in
   fun clean_spec_thm th = let
     val th = th |> REWRITE_RULE [GSYM word32_def, GSYM word64_def,
@@ -270,7 +277,31 @@ in
              |> CONV_RULE word_arith_lemma_CONV
     val th = th |> ONCE_REWRITE_RULE [fix_sub_word64]
                 |> SIMP_RULE std_ss [m0_preprocessing]
+                |> eval_matches_rule arm8_fp_imm_pat
     in th end
+end
+
+local
+  val arm8_FPCR_tm =
+    arm8_progTheory.arm8_FPCR_def |> SPEC_ALL |> concl |> dest_eq |> fst;
+in
+  fun remove_arm_FPCR th =
+    if can (find_term (can (match_term arm8_FPCR_tm))) (concl th) then let
+      val tm = find_term (can (match_term arm8_FPCR_tm)) (concl th)
+      val v = tm |> rand
+      val fp_r_var = mk_var("fp_rounding",“:word64”)
+      val th1 = CONV_RULE (PRE_CONV (helperLib.MOVE_OUT_CONV (rator tm))) th
+      val th2 = CONV_RULE (POST_CONV (helperLib.MOVE_OUT_CONV (rator tm))) th1
+      val th3 = CONV_RULE (POST_CONV ((RATOR_CONV o RAND_CONV)
+                  (UNBETA_CONV “^v.RMode”))) th2
+      val th4 = MATCH_MP TO_arm8_FP_ROUNDING_MODE (GEN v th3)
+      val th5 = CONV_RULE (DEPTH_CONV BETA_CONV) th4
+      val th6 = REWRITE_RULE [GSYM fp64_add_with_rounding_def,
+                              GSYM fp64_sub_with_rounding_def,
+                              GSYM fp64_mul_with_rounding_def,
+                              GSYM fp64_div_with_rounding_def] th5
+      in th6 end
+    else th
 end
 
 fun remove_arm_CONFIGURE th =
@@ -497,8 +528,8 @@ fun derive_individual_specs code = let
 
 (*
   val ((pos,instruction,asm)::code) = code
-  val ((pos,instruction,asm)::code) = drop 1 code
-  val ((pos,instruction,asm)::code) = drop 17 code
+  val ((pos,instruction,asm)::code) = drop 2 code
+  val ((pos,instruction,asm)::code) = drop 8 code
 *)
   fun get_specs [] = []
     | get_specs ((pos,instruction,asm)::code) = let
@@ -538,8 +569,8 @@ fun derive_individual_specs code = let
                get_specs code end
         else if String.isPrefix "dmb" asm then raise NoInstructionSpec
         else let
-          val g = clean_spec_thm o
-                  remove_arm_CONFIGURE o
+          val g = RW [FINAL_CLEANUP] o clean_spec_thm o
+                  remove_arm_CONFIGURE o remove_arm_FPCR o
                   inst_pc_rel_const o
                   inst_pc pos o RW [precond_def]
           val res = wrap_get_spec f instruction
