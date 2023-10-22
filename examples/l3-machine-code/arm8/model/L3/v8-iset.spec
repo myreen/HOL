@@ -1966,8 +1966,8 @@ instruction Decode (w::word) =
       ------------------------
       -- FloatingPointCompare
       ------------------------
-      case '00011110 ftype 1 Rm 001000 Rn 1 opc0 `1 000' =>
-         Data(FloatingPointCompare (ftype, opc0, Rm, Rn))
+      case '00011110 ftype 1 Rm 001000 Rn opc1 `1 opc0 `1 000' =>
+         Data(FloatingPointCompare (ftype, opc1, opc0, Rm, Rn))
 
       ------------------------
       -- LoadStoreRegisterFloatingPoint
@@ -1976,16 +1976,28 @@ instruction Decode (w::word) =
          LoadStore(LoadStoreRegisterFloatingPoint(size, opc, imm12, Rn, Rt))
 
       ------------------------
-      -- FloatingPointMov
+      -- FloatingPointMovDX
       ------------------------
       case 'sf 0011110 ftype 1 0 rmode 11 opcode0 `1 000000 Rn Rd' =>
-         Data(FloatingPointMov (sf, ftype, opcode0, Rn, Rd))
+         Data(FloatingPointMovDX (sf, ftype, opcode0, Rn, Rd))
+
+      ------------------------
+      -- FloatingPointMovDD
+      ------------------------
+      case '0 0 0 11110 ftype 1 0000 00 10000 Rn Rd' =>
+         Data(FloatingPointMovDD (ftype, Rn, Rd))
 
       ------------------------
       -- FloatingPointMovImm
       ------------------------
       case '00011110 ftype 1 imm8 100 00000 Rd' =>
          Data(FloatingPointMovImm (ftype, imm8, Rd))
+
+      ------------------------
+      -- UnsignedIntToFP
+      ------------------------
+      case '0 0 0 11110 01 1 00 011 000000 Rn Rd' =>
+         Data(UnsignedIntToFP (Rn, Rd))
 
       ------------------------
       -- Unallocated

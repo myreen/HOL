@@ -113,6 +113,13 @@ dword FPExpandImm8 (imm8 :: byte) =
    -- See ARM ARM C2-244
    imm8<7:7> : ~imm8<6:6> : imm8<6:6> ^ 8 : imm8<5:0> : '0' ^ 48
 
+dword UnsignedWordToFP64 (operand :: word) =
+{
+   mode = RoundingMode;
+   int_operand = [[operand] :: nat];
+   FP64_FromInt(mode, int_operand)
+}
+
 ------------------------
 -- Instruction Semantics
 ------------------------
@@ -126,10 +133,10 @@ exception UNSUPPORTED :: string
 define Data > FloatingPointAddSub(
   op :: bits(1), ftype :: bits(2), m :: reg, n :: reg, d :: reg) =
 {
-   match (ftype)
+   match ftype
    {
       case '01' =>
-         match (op)
+         match op
          {
             case '0' => D(d) <- FPAdd64(D(n), D(m))
             case '1' => D(d) <- FPSub64(D(n), D(m))
@@ -145,7 +152,7 @@ define Data > FloatingPointAddSub(
 define Data > FloatingPointMul(
   ftype :: bits(2), m :: reg, n :: reg, d :: reg) =
 {
-   match (ftype)
+   match ftype
    {
       case '01' => D(d) <- FPMul64(D(n), D(m))
       case _  => #UNSUPPORTED "Floating-point op not double-precision"
@@ -159,7 +166,7 @@ define Data > FloatingPointMul(
 define Data > FloatingPointMulAdd(
   ftype :: bits(2), m :: reg, a :: reg, n :: reg, d :: reg) =
 {
-   match (ftype)
+   match ftype
    {
       case '01' =>
          {
@@ -177,7 +184,7 @@ define Data > FloatingPointMulAdd(
 define Data > FloatingPointDiv(
   ftype :: bits(2), m :: reg, n :: reg, d :: reg) =
 {
-   match (ftype)
+   match ftype
    {
       case '01' => D(d) <- FPDiv64(D(n), D(m))
       case _  => #UNSUPPORTED "Floating-point op not double-precision"
@@ -189,15 +196,18 @@ define Data > FloatingPointDiv(
 -- FCMP Dn, #0.0
 -- FCMPE Dn, Dm
 -- FCMPE Dn, #0.0
+--
+-- FCMP (quiet)/FCMPE (signaling) distinguished by opc1 and is ignored
+-- here because we do not model exceptions and NaNs.
 ------------------------
 
 define Data > FloatingPointCompare(
-  ftype :: bits(2), opc0 :: bits(1), m :: reg, n :: reg) =
+  ftype :: bits(2), opc1 :: bits(1), opc0 :: bits(1), m :: reg, n :: reg) =
 {
-   match (ftype)
+   match ftype
    {
       case '01' =>
-         match (opc0)
+         match opc0
             {
                case '0' =>
                   SetTheFlags(true, FPCompare64(D(n), D(m)))
@@ -221,7 +231,7 @@ define LoadStore > LoadStoreRegisterFloatingPoint(
              else
                 X(n);
    address =  address + ZeroExtend(imm12);
-   match (size)
+   match size
    {
       case '11' =>
          match (opc<0:0>) -- bit 22: 0 => store / 1 => load
@@ -247,17 +257,31 @@ define LoadStore > LoadStoreRegisterFloatingPoint(
 -- FMOV Xd, Dn
 ------------------------
 
-define Data > FloatingPointMov(
+define Data > FloatingPointMovDX(
   sf :: bits(1), ftype :: bits(2), opcode0 :: bits(1), n :: reg, d :: reg) =
 {
    match (sf, ftype)
    {
       case ('1', '01') =>
-         match (opcode0)
+         match opcode0
             {
                case '0' => D(d) <- X(n)
                case '1' => X(d) <- D(n)
             }
+      case _  => #UNSUPPORTED "Floating-point op not double-precision"
+   }
+}
+
+------------------------
+-- FMOV Dd, Dn
+------------------------
+
+define Data > FloatingPointMovDD(
+  ftype :: bits(2), n :: reg, d :: reg) =
+{
+   match ftype
+   {
+      case '01' => D(d) <- D(n)
       case _  => #UNSUPPORTED "Floating-point op not double-precision"
    }
 }
@@ -274,4 +298,14 @@ define Data > FloatingPointMovImm(
       case '01' => D(d) <- FPExpandImm8(imm8)
       case _ => #UNSUPPORTED "Floating-point op not double-precision"
    }
+}
+------------------------
+-- UCVTF Dd, Wn
+------------------------
+
+define Data > UnsignedIntToFP(
+  n :: reg, d :: reg) =
+{
+   operand = X(n);
+   D(d) <- UnsignedWordToFP64(operand)
 }
